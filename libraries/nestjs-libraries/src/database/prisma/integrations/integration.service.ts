@@ -34,7 +34,7 @@ export class IntegrationService {
     private _workerServiceProducer: BullMqClient,
     @Inject(forwardRef(() => RefreshIntegrationService))
     private _refreshIntegrationService: RefreshIntegrationService
-  ) {}
+  ) { }
 
   async changeActiveCron(orgId: string) {
     const data = await this._autopostsRepository.getAutoposts(orgId);
@@ -80,12 +80,12 @@ export class IntegrationService {
   async createOrUpdateIntegration(
     additionalSettings:
       | {
-          title: string;
-          description: string;
-          type: 'checkbox' | 'text' | 'textarea';
-          value: any;
-          regex?: string;
-        }[]
+        title: string;
+        description: string;
+        type: 'checkbox' | 'text' | 'textarea';
+        value: any;
+        regex?: string;
+      }[]
       | undefined,
     oneTimeToken: boolean,
     org: string,
@@ -293,25 +293,72 @@ export class IntegrationService {
       );
     }
 
-    const getIntegrationInformation = await provider.fetchPageInformation(
+    // Handle both single item and array of items
+    const dataArray = Array.isArray(data) ? data : [data];
+
+    // Process the first item (update the existing integration)
+    const firstItem = dataArray[0];
+    const firstIntegrationInfo = await provider.fetchPageInformation(
       getIntegration.token,
-      data
+      firstItem
     );
 
     await this.checkForDeletedOnceAndUpdate(
       org,
-      String(getIntegrationInformation.id)
+      String(firstIntegrationInfo.id)
     );
     await this._integrationRepository.updateIntegration(id, {
-      picture: getIntegrationInformation.picture,
-      internalId: String(getIntegrationInformation.id),
-      name: getIntegrationInformation.name,
+      picture: firstIntegrationInfo.picture,
+      internalId: String(firstIntegrationInfo.id),
+      name: firstIntegrationInfo.name,
       inBetweenSteps: false,
-      token: getIntegrationInformation.access_token,
-      profile: getIntegrationInformation.username,
+      token: firstIntegrationInfo.access_token,
+      profile: firstIntegrationInfo.username,
     });
 
-    return { success: true };
+    // Create additional integrations for remaining items
+    const additionalIntegrations = [];
+    for (let i = 1; i < dataArray.length; i++) {
+      const item = dataArray[i];
+      const integrationInfo = await provider.fetchPageInformation(
+        getIntegration.token,
+        item
+      );
+
+      await this.checkForDeletedOnceAndUpdate(
+        org,
+        String(integrationInfo.id)
+      );
+
+      const newIntegration = await this.createOrUpdateIntegration(
+        undefined,
+        !!provider.oneTimeToken,
+        org,
+        integrationInfo.name,
+        integrationInfo.picture,
+        'social',
+        String(integrationInfo.id),
+        getIntegration.providerIdentifier,
+        integrationInfo.access_token,
+        getIntegration.refreshToken,
+        getIntegration.tokenExpiration ?
+          Math.floor((new Date(getIntegration.tokenExpiration).getTime() - Date.now()) / 1000) :
+          undefined,
+        integrationInfo.username,
+        false,
+        undefined,
+        getIntegration.timezone,
+        getIntegration.customInstanceDetails
+      );
+
+      additionalIntegrations.push(newIntegration);
+    }
+
+    return {
+      success: true,
+      count: dataArray.length,
+      additional: additionalIntegrations.length
+    };
   }
 
   async checkAnalytics(
