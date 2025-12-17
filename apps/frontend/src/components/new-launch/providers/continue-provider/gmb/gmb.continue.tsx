@@ -13,11 +13,13 @@ export const GmbContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [location, setSelectedLocation] = useState<null | {
-    id: string;
-    accountName: string;
-    locationName: string;
-  }>(null);
+  const [locations, setSelectedLocations] = useState<
+    Array<{
+      id: string;
+      accountName: string;
+      locationName: string;
+    }>
+  >([]);
   const t = useT();
 
   const loadPages = useCallback(async () => {
@@ -29,9 +31,18 @@ export const GmbContinue: FC<{
     }
   }, []);
 
-  const setLocation = useCallback(
+  const toggleLocation = useCallback(
     (param: { id: string; accountName: string; locationName: string }) => () => {
-      setSelectedLocation(param);
+      setSelectedLocations((prev) => {
+        const exists = prev.find((loc) => loc.id === param.id);
+        if (exists) {
+          // Remove if already selected
+          return prev.filter((loc) => loc.id !== param.id);
+        } else {
+          // Add if not selected
+          return [...prev, param];
+        }
+      });
     },
     []
   );
@@ -47,8 +58,8 @@ export const GmbContinue: FC<{
   });
 
   const saveGmb = useCallback(async () => {
-    await onSave(location);
-  }, [onSave, location]);
+    await onSave(locations);
+  }, [onSave, locations]);
 
   const filteredData = useMemo(() => {
     return (
@@ -98,15 +109,32 @@ export const GmbContinue: FC<{
             <div
               key={p.id}
               className={clsx(
-                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
-                location?.id === p.id && 'bg-seventh border-primary'
+                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px] relative',
+                locations.find((loc) => loc.id === p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setLocation({
+              onClick={toggleLocation({
                 id: p.id,
                 accountName: p.accountName,
                 locationName: p.locationName,
               })}
             >
+              {locations.find((loc) => loc.id === p.id) && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
               <div className="flex justify-center">
                 {p.picture?.data?.url ? (
                   <img
@@ -138,8 +166,13 @@ export const GmbContinue: FC<{
           )
         )}
       </div>
-      <div>
-        <Button disabled={!location} onClick={saveGmb}>
+      <div className="flex flex-col gap-[10px]">
+        {locations.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {t('selected_count', `${locations.length} location(s) selected`)}
+          </div>
+        )}
+        <Button disabled={locations.length === 0} onClick={saveGmb}>
           {t('save', 'Save')}
         </Button>
       </div>
