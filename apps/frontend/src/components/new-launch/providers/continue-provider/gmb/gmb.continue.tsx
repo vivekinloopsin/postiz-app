@@ -13,11 +13,14 @@ export const GmbContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [location, setSelectedLocation] = useState<null | {
-    id: string;
-    accountName: string;
-    locationName: string;
-  }>(null);
+  const [locations, setSelectedLocations] = useState<
+    Array<{
+      id: string;
+      accountName: string;
+      locationName: string;
+    }>
+  >([]);
+  const [showAll, setShowAll] = useState(false);
   const t = useT();
 
   const loadPages = useCallback(async () => {
@@ -29,9 +32,14 @@ export const GmbContinue: FC<{
     }
   }, []);
 
-  const setLocation = useCallback(
+  const toggleLocation = useCallback(
     (param: { id: string; accountName: string; locationName: string }) => () => {
-      setSelectedLocation(param);
+      setSelectedLocations((prev) => {
+        if (prev.find((p) => p.id === param.id)) {
+          return prev.filter((p) => p.id !== param.id);
+        }
+        return [...prev, param];
+      });
     },
     []
   );
@@ -47,14 +55,31 @@ export const GmbContinue: FC<{
   });
 
   const saveGmb = useCallback(async () => {
-    await onSave(location);
-  }, [onSave, location]);
+    await onSave(locations);
+  }, [onSave, locations]);
 
   const filteredData = useMemo(() => {
+    if (showAll) {
+      return data || [];
+    }
     return (
       data?.filter((p: { id: string }) => !existingId.includes(p.id)) || []
     );
-  }, [data, existingId]);
+  }, [data, existingId, showAll]);
+
+  const selectAll = useCallback(() => {
+    if (locations.length === filteredData.length) {
+      setSelectedLocations([]);
+      return;
+    }
+    setSelectedLocations(
+      filteredData.map((p: any) => ({
+        id: p.id,
+        accountName: p.accountName,
+        locationName: p.locationName,
+      }))
+    );
+  }, [locations, filteredData]);
 
   if (!isLoading && !data?.length) {
     return (
@@ -81,7 +106,31 @@ export const GmbContinue: FC<{
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <div>{t('select_location', 'Select Business Location:')}</div>
+      <div className="flex justify-between items-center">
+        <div>{t('select_location', 'Select Business Location:')}</div>
+        <div className="flex gap-[10px]">
+          {!!filteredData?.length && (
+            <div
+              onClick={selectAll}
+              className="cursor-pointer text-primary underline"
+            >
+              {locations.length === filteredData.length
+                ? t('deselect_all', 'Deselect All')
+                : t('select_all', 'Select All')}
+            </div>
+          )}
+          {!!data?.length && (
+            <div
+              onClick={() => setShowAll(!showAll)}
+              className="cursor-pointer text-primary underline"
+            >
+              {showAll
+                ? t('hide_existing', 'Hide Existing')
+                : t('show_all', 'Show All')}
+            </div>
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-3 justify-items-center select-none cursor-pointer gap-[10px]">
         {filteredData?.map(
           (p: {
@@ -99,9 +148,11 @@ export const GmbContinue: FC<{
               key={p.id}
               className={clsx(
                 'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
-                location?.id === p.id && 'bg-seventh border-primary'
+                existingId.includes(p.id) ? 'opacity-50' : '',
+                locations.find((l) => l.id === p.id) &&
+                'bg-seventh border-primary'
               )}
-              onClick={setLocation({
+              onClick={toggleLocation({
                 id: p.id,
                 accountName: p.accountName,
                 locationName: p.locationName,
@@ -139,11 +190,10 @@ export const GmbContinue: FC<{
         )}
       </div>
       <div>
-        <Button disabled={!location} onClick={saveGmb}>
+        <Button disabled={!locations.length} onClick={saveGmb}>
           {t('save', 'Save')}
         </Button>
       </div>
     </div>
   );
 };
-

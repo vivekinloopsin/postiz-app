@@ -13,7 +13,9 @@ export const FacebookContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [page, setSelectedPage] = useState<null | string>(null);
+  const [pages, setSelectedPages] = useState<string[]>([]);
+  const [showAll, setShowAll] = useState(false);
+
   const loadPages = useCallback(async () => {
     try {
       const pages = await call.get('pages');
@@ -22,12 +24,19 @@ export const FacebookContinue: FC<{
       // Handle error silently
     }
   }, []);
-  const setPage = useCallback(
+
+  const togglePage = useCallback(
     (id: string) => () => {
-      setSelectedPage(id);
+      setSelectedPages((prev) => {
+        if (prev.includes(id)) {
+          return prev.filter((p) => p !== id);
+        }
+        return [...prev, id];
+      });
     },
     []
   );
+
   const { data, isLoading } = useSWR('load-pages', loadPages, {
     refreshWhenHidden: false,
     refreshWhenOffline: false,
@@ -40,13 +49,26 @@ export const FacebookContinue: FC<{
   const t = useT();
 
   const saveFacebook = useCallback(async () => {
-    await onSave({ page });
-  }, [onSave, page]);
+    await onSave(pages.map((p) => ({ page: p })));
+  }, [onSave, pages]);
+
   const filteredData = useMemo(() => {
+    if (showAll) {
+      return data || [];
+    }
     return (
       data?.filter((p: { id: string }) => !existingId.includes(p.id)) || []
     );
-  }, [data]);
+  }, [data, existingId, showAll]);
+
+  const selectAll = useCallback(() => {
+    if (pages.length === filteredData.length) {
+      setSelectedPages([]);
+      return;
+    }
+    setSelectedPages(filteredData.map((p: any) => p.id));
+  }, [pages, filteredData]);
+
   if (!isLoading && !data?.length) {
     return (
       <div className="text-center flex justify-center items-center text-[18px] leading-[50px] h-[300px]">
@@ -69,8 +91,32 @@ export const FacebookContinue: FC<{
   }
   return (
     <div className="flex flex-col gap-[20px]">
-      <div>{t('select_page', 'Select Page:')}</div>
-      <div className="grid grid-cols-3 justify-items-center select-none cursor-pointer">
+      <div className="flex justify-between items-center">
+        <div>{t('select_page', 'Select Page:')}</div>
+        <div className="flex gap-[10px]">
+          {!!filteredData?.length && (
+            <div
+              onClick={selectAll}
+              className="cursor-pointer text-primary underline"
+            >
+              {pages.length === filteredData.length
+                ? t('deselect_all', 'Deselect All')
+                : t('select_all', 'Select All')}
+            </div>
+          )}
+          {!!data?.length && (
+            <div
+              onClick={() => setShowAll(!showAll)}
+              className="cursor-pointer text-primary underline"
+            >
+              {showAll
+                ? t('hide_existing', 'Hide Existing')
+                : t('show_all', 'Show All')}
+            </div>
+          )}
+        </div>
+      </div>
+      <div className="grid grid-cols-3 justify-items-center select-none cursor-pointer gap-[10px]">
         {filteredData?.map(
           (p: {
             id: string;
@@ -85,25 +131,26 @@ export const FacebookContinue: FC<{
             <div
               key={p.id}
               className={clsx(
-                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh',
-                page === p.id && 'bg-seventh'
+                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
+                existingId.includes(p.id) ? 'opacity-50' : '',
+                pages.includes(p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setPage(p.id)}
+              onClick={togglePage(p.id)}
             >
               <div>
                 <img
-                  className="w-full"
+                  className="w-full rounded-[8px]"
                   src={p.picture.data.url}
                   alt="profile"
                 />
               </div>
-              <div>{p.name}</div>
+              <div className="truncate w-full">{p.name}</div>
             </div>
           )
         )}
       </div>
       <div>
-        <Button disabled={!page} onClick={saveFacebook}>
+        <Button disabled={!pages.length} onClick={saveFacebook}>
           {t('save', 'Save')}
         </Button>
       </div>

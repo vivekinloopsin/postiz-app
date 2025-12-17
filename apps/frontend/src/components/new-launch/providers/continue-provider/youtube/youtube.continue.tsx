@@ -13,7 +13,8 @@ export const YoutubeContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [channel, setSelectedChannel] = useState<null | { id: string }>(null);
+  const [channels, setSelectedChannels] = useState<Array<{ id: string }>>([]);
+  const [showAll, setShowAll] = useState(false);
   const t = useT();
 
   const loadChannels = useCallback(async () => {
@@ -25,9 +26,14 @@ export const YoutubeContinue: FC<{
     }
   }, []);
 
-  const setChannel = useCallback(
+  const toggleChannel = useCallback(
     (param: { id: string }) => () => {
-      setSelectedChannel(param);
+      setSelectedChannels((prev) => {
+        if (prev.find((p) => p.id === param.id)) {
+          return prev.filter((p) => p.id !== param.id);
+        }
+        return [...prev, param];
+      });
     },
     []
   );
@@ -43,14 +49,25 @@ export const YoutubeContinue: FC<{
   });
 
   const saveYoutube = useCallback(async () => {
-    await onSave(channel);
-  }, [onSave, channel]);
+    await onSave(channels);
+  }, [onSave, channels]);
 
   const filteredData = useMemo(() => {
+    if (showAll) {
+      return data || [];
+    }
     return (
       data?.filter((p: { id: string }) => !existingId.includes(p.id)) || []
     );
-  }, [data, existingId]);
+  }, [data, existingId, showAll]);
+
+  const selectAll = useCallback(() => {
+    if (channels.length === filteredData.length) {
+      setSelectedChannels([]);
+      return;
+    }
+    setSelectedChannels(filteredData.map((p: any) => ({ id: p.id })));
+  }, [channels, filteredData]);
 
   if (!isLoading && !data?.length) {
     return (
@@ -77,7 +94,31 @@ export const YoutubeContinue: FC<{
 
   return (
     <div className="flex flex-col gap-[20px]">
-      <div>{t('select_channel', 'Select YouTube Channel:')}</div>
+      <div className="flex justify-between items-center">
+        <div>{t('select_channel', 'Select YouTube Channel:')}</div>
+        <div className="flex gap-[10px]">
+          {!!filteredData?.length && (
+            <div
+              onClick={selectAll}
+              className="cursor-pointer text-primary underline"
+            >
+              {channels.length === filteredData.length
+                ? t('deselect_all', 'Deselect All')
+                : t('select_all', 'Select All')}
+            </div>
+          )}
+          {!!data?.length && (
+            <div
+              onClick={() => setShowAll(!showAll)}
+              className="cursor-pointer text-primary underline"
+            >
+              {showAll
+                ? t('hide_existing', 'Hide Existing')
+                : t('show_all', 'Show All')}
+            </div>
+          )}
+        </div>
+      </div>
       <div className="grid grid-cols-3 justify-items-center select-none cursor-pointer gap-[10px]">
         {filteredData?.map(
           (p: {
@@ -95,9 +136,10 @@ export const YoutubeContinue: FC<{
               key={p.id}
               className={clsx(
                 'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
-                channel?.id === p.id && 'bg-seventh border-primary'
+                existingId.includes(p.id) ? 'opacity-50' : '',
+                channels.find((c) => c.id === p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setChannel({ id: p.id })}
+              onClick={toggleChannel({ id: p.id })}
             >
               <div className="flex justify-center">
                 {p.picture?.data?.url ? (
@@ -139,7 +181,7 @@ export const YoutubeContinue: FC<{
         )}
       </div>
       <div>
-        <Button disabled={!channel} onClick={saveYoutube}>
+        <Button disabled={!channels.length} onClick={saveYoutube}>
           {t('save', 'Save')}
         </Button>
       </div>
