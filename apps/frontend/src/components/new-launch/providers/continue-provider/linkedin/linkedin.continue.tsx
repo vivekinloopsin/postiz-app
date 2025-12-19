@@ -52,7 +52,7 @@ export const LinkedinContinue: FC<{
     refreshInterval: 0,
   });
   const saveLinkedin = useCallback(async () => {
-    await onSave({ pages: pages.map((p) => p.id) });
+    await onSave(pages.map((p) => ({ page: p.id })));
   }, [onSave, pages]);
   const filteredData = useMemo(() => {
     return (

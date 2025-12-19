@@ -47,7 +47,7 @@ export const FacebookContinue: FC<{
   const t = useT();
 
   const saveFacebook = useCallback(async () => {
-    await onSave({ pages });
+    await onSave(pages.map((pageId) => ({ page: pageId })));
   }, [onSave, pages]);
   const filteredData = useMemo(() => {
     return (
