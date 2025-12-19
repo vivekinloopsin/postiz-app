@@ -263,7 +263,7 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
               let photoUrl = '';
               try {
                 const mediaResponse = await fetch(
-                  `https://mybusinessbusinessinformation.googleapis.com/v1/${location.name}/media`,
+                  `https://mybusinessbusinessinformation.googleapis.com/v1/${location.name}/media?pageSize=100`,
                   {
                     headers: {
                       Authorization: `Bearer ${accessToken}`,
@@ -276,10 +276,11 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
                   const logoPhoto = items.find((m: any) => m.locationAssociation?.category === 'LOGO');
                   const profilePhoto = items.find((m: any) => m.locationAssociation?.category === 'PROFILE');
                   const coverPhoto = items.find((m: any) => m.locationAssociation?.category === 'COVER');
+                  const anyPhoto = items.find((m: any) => m.mediaFormat === 'PHOTO');
 
-                  const photo = logoPhoto || profilePhoto || coverPhoto || items[0];
-                  if (photo?.googleUrl) {
-                    photoUrl = photo.googleUrl;
+                  const photo = logoPhoto || profilePhoto || coverPhoto || anyPhoto || items[0];
+                  if (photo) {
+                    photoUrl = photo.googleUrl || photo.thumbnailUrl || '';
                   }
                 }
               } catch {
@@ -333,7 +334,7 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
     let photoUrl = '';
     try {
       const mediaResponse = await fetch(
-        `https://mybusinessbusinessinformation.googleapis.com/v1/${data.locationName}/media`,
+        `https://mybusinessbusinessinformation.googleapis.com/v1/${data.locationName}/media?pageSize=100`,
         {
           headers: {
             Authorization: `Bearer ${accessToken}`,
@@ -346,10 +347,11 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
         const logoPhoto = items.find((m: any) => m.locationAssociation?.category === 'LOGO');
         const profilePhoto = items.find((m: any) => m.locationAssociation?.category === 'PROFILE');
         const coverPhoto = items.find((m: any) => m.locationAssociation?.category === 'COVER');
+        const anyPhoto = items.find((m: any) => m.mediaFormat === 'PHOTO');
 
-        const photo = logoPhoto || profilePhoto || coverPhoto || items[0];
-        if (photo?.googleUrl) {
-          photoUrl = photo.googleUrl;
+        const photo = logoPhoto || profilePhoto || coverPhoto || anyPhoto || items[0];
+        if (photo) {
+          photoUrl = photo.googleUrl || photo.thumbnailUrl || '';
         }
       }
     } catch {
