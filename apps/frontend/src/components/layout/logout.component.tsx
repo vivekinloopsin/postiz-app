@@ -28,7 +28,7 @@ export const LogoutComponent = () => {
           method: 'POST',
         });
       }
-      window.location.href = '/';
+      window.location.href = '/auth/logout';
     }
   }, []);
   return (
