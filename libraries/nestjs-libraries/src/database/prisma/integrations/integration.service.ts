@@ -347,7 +347,7 @@ export class IntegrationService {
         integrationInfo.username,
         false,
         undefined,
-        getIntegration.timezone,
+        undefined, // timezone - not applicable for additional integrations
         getIntegration.customInstanceDetails
       );
 
