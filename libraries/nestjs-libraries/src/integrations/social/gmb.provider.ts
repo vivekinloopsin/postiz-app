@@ -165,6 +165,16 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
     };
   }
 
+  private formatAddress(address: any) {
+    if (!address) {
+      return '';
+    }
+
+    const { addressLines, locality, administrativeArea, postalCode } = address;
+    const lines = [...(addressLines || []), locality, administrativeArea, postalCode].filter(Boolean);
+    return lines.join(', ');
+  }
+
   async pages(accessToken: string) {
     const allAccounts = [];
     let accountNextPageToken: string | undefined = undefined;
@@ -193,6 +203,18 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
 
     if (allAccounts.length === 0) {
       return [];
+    }
+
+    // Get account picture as fallback
+    const { oauth2, client } = clientAndGmb();
+    client.setCredentials({ access_token: accessToken });
+    const user = oauth2(client);
+    let accountPicture = '';
+    try {
+      const { data: userData } = await user.userinfo.get();
+      accountPicture = userData?.picture || '';
+    } catch {
+      // Ignore userinfo fetch errors
     }
 
     // Get locations for each account
@@ -250,26 +272,28 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
                 );
                 const mediaData = await mediaResponse.json();
                 if (mediaData.mediaItems && mediaData.mediaItems.length > 0) {
-                  const profilePhoto = mediaData.mediaItems.find(
-                    (m: any) =>
-                      m.mediaFormat === 'PHOTO' &&
-                      m.locationAssociation?.category === 'PROFILE'
-                  );
-                  if (profilePhoto?.googleUrl) {
-                    photoUrl = profilePhoto.googleUrl;
-                  } else if (mediaData.mediaItems[0]?.googleUrl) {
-                    photoUrl = mediaData.mediaItems[0].googleUrl;
+                  const items = mediaData.mediaItems;
+                  const logoPhoto = items.find((m: any) => m.locationAssociation?.category === 'LOGO');
+                  const profilePhoto = items.find((m: any) => m.locationAssociation?.category === 'PROFILE');
+                  const coverPhoto = items.find((m: any) => m.locationAssociation?.category === 'COVER');
+
+                  const photo = logoPhoto || profilePhoto || coverPhoto || items[0];
+                  if (photo?.googleUrl) {
+                    photoUrl = photo.googleUrl;
                   }
                 }
               } catch {
                 // Ignore media fetch errors
               }
 
+              const formattedAddress = this.formatAddress(location.storefrontAddress);
+              const displayName = formattedAddress ? `${location.title || 'Unnamed Location'} (${formattedAddress})` : (location.title || 'Unnamed Location');
+
               allLocations.push({
                 // id is the full resource path for the v4 API: accounts/{accountId}/locations/{locationId}
                 id: fullResourceName,
-                name: location.title || 'Unnamed Location',
-                picture: { data: { url: photoUrl } },
+                name: displayName,
+                picture: { data: { url: photoUrl || accountPicture } },
                 accountName: accountName,
                 locationName: location.name,
               });
@@ -318,25 +342,39 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
       );
       const mediaData = await mediaResponse.json();
       if (mediaData.mediaItems && mediaData.mediaItems.length > 0) {
-        const profilePhoto = mediaData.mediaItems.find(
-          (m: any) =>
-            m.mediaFormat === 'PHOTO' &&
-            m.locationAssociation?.category === 'PROFILE'
-        );
-        if (profilePhoto?.googleUrl) {
-          photoUrl = profilePhoto.googleUrl;
-        } else if (mediaData.mediaItems[0]?.googleUrl) {
-          photoUrl = mediaData.mediaItems[0].googleUrl;
+        const items = mediaData.mediaItems;
+        const logoPhoto = items.find((m: any) => m.locationAssociation?.category === 'LOGO');
+        const profilePhoto = items.find((m: any) => m.locationAssociation?.category === 'PROFILE');
+        const coverPhoto = items.find((m: any) => m.locationAssociation?.category === 'COVER');
+
+        const photo = logoPhoto || profilePhoto || coverPhoto || items[0];
+        if (photo?.googleUrl) {
+          photoUrl = photo.googleUrl;
         }
       }
     } catch {
       // Ignore media fetch errors
     }
 
+    if (!photoUrl) {
+      try {
+        const { oauth2, client } = clientAndGmb();
+        client.setCredentials({ access_token: accessToken });
+        const user = oauth2(client);
+        const { data: userData } = await user.userinfo.get();
+        photoUrl = userData?.picture || '';
+      } catch {
+        // Ignore userinfo fetch errors
+      }
+    }
+
+    const formattedAddress = this.formatAddress(locationData.storefrontAddress);
+    const displayName = formattedAddress ? `${locationData.title || 'Unnamed Location'} (${formattedAddress})` : (locationData.title || 'Unnamed Location');
+
     return {
       // Return the full resource path as id (for v4 Local Posts API)
       id: data.id,
-      name: locationData.title || 'Unnamed Location',
+      name: displayName,
       access_token: accessToken,
       picture: photoUrl,
       username: '',
