@@ -10,9 +10,7 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 @Injectable()
 export class UsersRepository {
   constructor(
-    private _user: PrismaRepository<'user'>,
-    private _userOrganization: PrismaRepository<'userOrganization'>,
-    private _itemUser: PrismaRepository<'itemUser'>
+    private _user: PrismaRepository<'user'>
   ) { }
 
   getImpersonateUser(name: string) {
@@ -269,13 +267,13 @@ export class UsersRepository {
     };
   }
   async deleteAccount(userId: string) {
-    await this._userOrganization.model.userOrganization.deleteMany({
+    await (this._user.model as any).userOrganization.deleteMany({
       where: {
         userId,
       },
     });
 
-    await this._itemUser.model.itemUser.deleteMany({
+    await (this._user.model as any).itemUser.deleteMany({
       where: {
         userId,
       },

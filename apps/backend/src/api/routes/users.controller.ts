@@ -1,3 +1,4 @@
+declare let process: any;
 import {
   Body,
   Controller,
@@ -213,48 +214,57 @@ export class UsersController {
   }
 
   @Post('/logout')
+  @Post('/logout')
   logout(@Res({ passthrough: true }) response: Response) {
-    response.header('logout', 'true');
-    response.cookie('auth', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
-          secure: true,
-          httpOnly: true,
-          sameSite: 'none',
-        }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+    console.log('Logging out user...');
+    try {
+      response.header('logout', 'true');
+      const domain = getCookieUrlFromDomain(process.env.FRONTEND_URL!);
 
-    response.cookie('showorg', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
-          secure: true,
-          httpOnly: true,
-          sameSite: 'none',
-        }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+      response.cookie('auth', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+          }
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
 
-    response.cookie('impersonate', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
-          secure: true,
-          httpOnly: true,
-          sameSite: 'none',
-        }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+      response.cookie('showorg', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+          }
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
 
-    response.status(200).send();
+      response.cookie('impersonate', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+          }
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
+
+      response.status(200).send();
+    } catch (e) {
+      console.error('Logout error:', e);
+      response.status(200).send();
+    }
   }
 
   @Post('/t')
@@ -301,7 +311,9 @@ export class UsersController {
     @GetUserFromRequest() user: User,
     @Res({ passthrough: true }) response: Response
   ) {
+    console.log('Deleting account for user:', user.id);
     await this._userService.deleteAccount(user.id);
+    console.log('Account deleted, clearing cookies...');
     response.header('logout', 'true');
     response.cookie('auth', '', {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
