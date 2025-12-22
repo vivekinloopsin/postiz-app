@@ -1,4 +1,4 @@
-import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
+import { PrismaRepository } from '../prisma.service';
 import { Injectable } from '@nestjs/common';
 import { Provider } from '@prisma/client';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
@@ -9,7 +9,11 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 
 @Injectable()
 export class UsersRepository {
-  constructor(private _user: PrismaRepository<'user'>) { }
+  constructor(
+    private _user: PrismaRepository<'user'>,
+    private _userOrganization: PrismaRepository<'userOrganization'>,
+    private _itemUser: PrismaRepository<'itemUser'>
+  ) { }
 
   getImpersonateUser(name: string) {
     return this._user.model.user.findMany({
@@ -265,13 +269,13 @@ export class UsersRepository {
     };
   }
   async deleteAccount(userId: string) {
-    await this._user.model.userOrganization.deleteMany({
+    await this._userOrganization.model.userOrganization.deleteMany({
       where: {
         userId,
       },
     });
 
-    await this._user.model.itemUser.deleteMany({
+    await this._itemUser.model.itemUser.deleteMany({
       where: {
         userId,
       },
