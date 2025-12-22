@@ -4,16 +4,14 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { FC, useCallback } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { ExistingChannelsModal } from './existing.channels.modal.component';
 import useSWR from 'swr';
 
-export const useExistingChannels = (update?: () => void) => {
+export const useExistingLinkedinChannels = (update?: () => void) => {
     const modal = useModals();
     const fetch = useFetch();
 
-    // Preload data using SWR - fetches on mount and caches
-    const { data: savedAccounts, isLoading } = useSWR(
-        '/integrations/social/gmb/saved-accounts',
+    const { data: savedAccounts } = useSWR(
+        '/integrations/social/linkedin/saved-accounts',
         async (url) => {
             try {
                 const response = await fetch(url);
@@ -29,18 +27,18 @@ export const useExistingChannels = (update?: () => void) => {
         }
     );
 
-    return useCallback(() => {
-        // Open modal immediately with cached data
+    return useCallback(async () => {
+        const { ExistingLinkedinModal } = await import('./existing.linkedin.modal.component');
         modal.openModal({
-            title: 'Existing Google Business Accounts',
+            title: 'Existing LinkedIn Pages',
             withCloseButton: true,
-            children: <ExistingChannelsModal accounts={savedAccounts || []} update={update} />,
+            children: <ExistingLinkedinModal accounts={savedAccounts || []} update={update} />,
         });
     }, [savedAccounts, update]);
 };
 
-export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) => {
-    const openExisting = useExistingChannels(update);
+export const ExistingLinkedinButton: FC<{ update?: () => void }> = ({ update }) => {
+    const openExisting = useExistingLinkedinChannels(update);
     const t = useT();
 
     return (
@@ -55,7 +53,7 @@ export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) 
                 </svg>
             </div>
             <div className="text-start text-[16px] group-[.sidebar]:hidden">
-                {t('existing_channels', 'Existing Channels')}
+                {t('existing_linkedin_pages', 'Existing LinkedIn Pages')}
             </div>
         </button>
     );

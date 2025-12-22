@@ -4,16 +4,31 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { FC, useCallback } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { ExistingChannelsModal } from './existing.channels.modal.component';
 import useSWR from 'swr';
 
-export const useExistingChannels = (update?: () => void) => {
+interface FacebookPage {
+    id: string;
+    name: string;
+    username: string;
+    picture: { data: { url: string } };
+}
+
+interface SavedAccount {
+    rootId: string;
+    name: string;
+    picture: string;
+    pages: FacebookPage[];
+    token: string;
+    refreshToken: string;
+}
+
+export const useExistingFacebookChannels = (update?: () => void) => {
     const modal = useModals();
     const fetch = useFetch();
 
-    // Preload data using SWR - fetches on mount and caches
-    const { data: savedAccounts, isLoading } = useSWR(
-        '/integrations/social/gmb/saved-accounts',
+    // Preload data using SWR
+    const { data: savedAccounts } = useSWR(
+        '/integrations/social/facebook/saved-accounts',
         async (url) => {
             try {
                 const response = await fetch(url);
@@ -29,18 +44,18 @@ export const useExistingChannels = (update?: () => void) => {
         }
     );
 
-    return useCallback(() => {
-        // Open modal immediately with cached data
+    return useCallback(async () => {
+        const { ExistingFacebookModal } = await import('./existing.facebook.modal.component');
         modal.openModal({
-            title: 'Existing Google Business Accounts',
+            title: 'Existing Facebook Pages',
             withCloseButton: true,
-            children: <ExistingChannelsModal accounts={savedAccounts || []} update={update} />,
+            children: <ExistingFacebookModal accounts={savedAccounts || []} update={update} />,
         });
     }, [savedAccounts, update]);
 };
 
-export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) => {
-    const openExisting = useExistingChannels(update);
+export const ExistingFacebookButton: FC<{ update?: () => void }> = ({ update }) => {
+    const openExisting = useExistingFacebookChannels(update);
     const t = useT();
 
     return (
@@ -55,7 +70,7 @@ export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) 
                 </svg>
             </div>
             <div className="text-start text-[16px] group-[.sidebar]:hidden">
-                {t('existing_channels', 'Existing Channels')}
+                {t('existing_facebook_pages', 'Existing Facebook Pages')}
             </div>
         </button>
     );

@@ -27,6 +27,10 @@ import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useIntegrationList } from '@gitroom/frontend/components/launches/helpers/use.integration.list';
 import useCookie from 'react-use-cookie';
 import { ExistingChannelsButton } from '@gitroom/frontend/components/launches/existing.channels.button.component';
+import { ExistingFacebookButton } from '@gitroom/frontend/components/launches/existing.facebook.button.component';
+import { ExistingInstagramButton } from '@gitroom/frontend/components/launches/existing.instagram.button.component';
+import { ExistingLinkedinButton } from '@gitroom/frontend/components/launches/existing.linkedin.button.component';
+import { ExistingYoutubeButton } from '@gitroom/frontend/components/launches/existing.youtube.button.component';
 
 export const SVGLine = () => {
   return (
@@ -585,6 +589,10 @@ export const LaunchesComponent = () => {
             <div className="flex flex-col gap-[8px] group-[.sidebar]:mx-auto group-[.sidebar]:w-[44px]">
               <AddProviderButton update={() => { update(true); setMobileMenuOpen(false); }} />
               <ExistingChannelsButton update={() => { update(true); setMobileMenuOpen(false); }} />
+              <ExistingFacebookButton update={() => { update(true); setMobileMenuOpen(false); }} />
+              <ExistingInstagramButton update={() => { update(true); setMobileMenuOpen(false); }} />
+              <ExistingLinkedinButton update={() => { update(true); setMobileMenuOpen(false); }} />
+              <ExistingYoutubeButton update={() => { update(true); setMobileMenuOpen(false); }} />
               <div className="flex gap-[8px] group-[.sidebar]:flex-col">
                 {sortedIntegrations?.length > 0 && <NewPost />}
                 {sortedIntegrations?.length > 0 &&

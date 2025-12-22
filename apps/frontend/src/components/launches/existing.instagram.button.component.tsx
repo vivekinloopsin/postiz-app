@@ -4,16 +4,14 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { FC, useCallback } from 'react';
 import { useFetch } from '@gitroom/helpers/utils/custom.fetch';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
-import { ExistingChannelsModal } from './existing.channels.modal.component';
 import useSWR from 'swr';
 
-export const useExistingChannels = (update?: () => void) => {
+export const useExistingInstagramChannels = (update?: () => void) => {
     const modal = useModals();
     const fetch = useFetch();
 
-    // Preload data using SWR - fetches on mount and caches
-    const { data: savedAccounts, isLoading } = useSWR(
-        '/integrations/social/gmb/saved-accounts',
+    const { data: savedAccounts } = useSWR(
+        '/integrations/social/instagram/saved-accounts',
         async (url) => {
             try {
                 const response = await fetch(url);
@@ -29,18 +27,18 @@ export const useExistingChannels = (update?: () => void) => {
         }
     );
 
-    return useCallback(() => {
-        // Open modal immediately with cached data
+    return useCallback(async () => {
+        const { ExistingInstagramModal } = await import('./existing.instagram.modal.component');
         modal.openModal({
-            title: 'Existing Google Business Accounts',
+            title: 'Existing Instagram Accounts',
             withCloseButton: true,
-            children: <ExistingChannelsModal accounts={savedAccounts || []} update={update} />,
+            children: <ExistingInstagramModal accounts={savedAccounts || []} update={update} />,
         });
     }, [savedAccounts, update]);
 };
 
-export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) => {
-    const openExisting = useExistingChannels(update);
+export const ExistingInstagramButton: FC<{ update?: () => void }> = ({ update }) => {
+    const openExisting = useExistingInstagramChannels(update);
     const t = useT();
 
     return (
@@ -55,7 +53,7 @@ export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) 
                 </svg>
             </div>
             <div className="text-start text-[16px] group-[.sidebar]:hidden">
-                {t('existing_channels', 'Existing Channels')}
+                {t('existing_instagram_accounts', 'Existing Instagram Accounts')}
             </div>
         </button>
     );

@@ -7,28 +7,27 @@ import { useModals } from '@gitroom/frontend/components/layout/new-modal';
 import { useToaster } from '@gitroom/react/toaster/toaster';
 import { Button } from '@gitroom/react/form/button';
 
-interface Location {
+interface FacebookPage {
     id: string;
     name: string;
+    username: string;
     picture: { data: { url: string } };
-    accountName: string;
-    locationName: string;
 }
 
 interface SavedAccount {
     rootId: string;
     name: string;
     picture: string;
-    locations: Location[];
+    pages: FacebookPage[];
     token: string;
     refreshToken: string;
 }
 
-export const ExistingChannelsModal: FC<{
+export const ExistingFacebookModal: FC<{
     accounts: SavedAccount[];
     update?: () => void;
 }> = ({ accounts, update }) => {
-    const [selectedLocation, setSelectedLocation] = useState<{ locationId: string; account: SavedAccount } | null>(null);
+    const [selectedPage, setSelectedPage] = useState<{ pageId: string; account: SavedAccount } | null>(null);
     const [loading, setLoading] = useState(false);
     const fetch = useFetch();
     const router = useRouter();
@@ -36,73 +35,73 @@ export const ExistingChannelsModal: FC<{
     const toaster = useToaster();
 
     const handleConnect = useCallback(async () => {
-        if (!selectedLocation) return;
+        if (!selectedPage) return;
 
         setLoading(true);
         try {
-            await fetch('/integrations/social/gmb/connect-saved', {
+            await fetch('/integrations/social/facebook/connect-saved', {
                 method: 'POST',
                 body: JSON.stringify({
-                    locationId: selectedLocation.locationId,
-                    accessToken: selectedLocation.account.token,
-                    refreshToken: selectedLocation.account.refreshToken,
+                    pageId: selectedPage.pageId,
+                    accessToken: selectedPage.account.token,
+                    refreshToken: selectedPage.account.refreshToken,
                 }),
             });
 
             modal.closeAll();
             router.refresh();
             if (update) update();
-            toaster.show('Location added successfully', 'success');
+            toaster.show('Facebook page added successfully', 'success');
         } catch (error) {
-            toaster.show('Failed to add location', 'warning');
+            toaster.show('Failed to add Facebook page', 'warning');
         } finally {
             setLoading(false);
         }
-    }, [selectedLocation]);
+    }, [selectedPage]);
 
     if (accounts.length === 0) {
         return (
             <div className="p-[20px] text-center">
-                <p>No saved Google Business accounts found.</p>
+                <p>No saved Facebook accounts found.</p>
                 <p className="text-sm text-gray-500 mt-2">
-                    Add a Google My Business channel first to save your account.
+                    Add a Facebook channel first to save your account.
                 </p>
             </div>
         );
     }
 
-    // Flatten all locations from all accounts
-    const allLocations = accounts.flatMap(account =>
-        account.locations.map(location => ({
-            ...location,
+    // Flatten all pages from all accounts
+    const allPages = accounts.flatMap(account =>
+        account.pages.map(page => ({
+            ...page,
             account,
         }))
     );
 
     return (
         <div className="flex flex-col gap-[20px] p-[20px]">
-            {/* Location Selection - Show all locations from all accounts */}
+            {/* Page Selection */}
             <div>
-                <h3 className="mb-[10px] font-semibold">Select Business Location</h3>
+                <h3 className="mb-[10px] font-semibold">Select Facebook Page</h3>
                 <div className="grid grid-cols-1 gap-[10px] max-h-[400px] overflow-y-auto">
-                    {allLocations.map((location) => (
+                    {allPages.map((page) => (
                         <div
-                            key={location.id}
-                            onClick={() => setSelectedLocation({ locationId: location.id, account: location.account })}
-                            className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedLocation?.locationId === location.id
+                            key={page.id}
+                            onClick={() => setSelectedPage({ pageId: page.id, account: page.account })}
+                            className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedPage?.pageId === page.id
                                     ? 'border-primary bg-primary/10'
                                     : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
                                 }`}
                         >
                             <div className="flex items-center gap-[10px]">
                                 <img
-                                    src={location.picture.data.url || '/no-picture.jpg'}
+                                    src={page.picture.data.url || '/no-picture.jpg'}
                                     className="w-[36px] h-[36px] rounded-[8px]"
-                                    alt={location.name}
+                                    alt={page.name}
                                 />
                                 <div className="flex-1 min-w-0">
-                                    <div className="font-medium truncate">{location.name}</div>
-                                    <div className="text-xs text-gray-500">{location.account.name}</div>
+                                    <div className="font-medium truncate">{page.name}</div>
+                                    <div className="text-xs text-gray-500">{page.account.name}</div>
                                 </div>
                             </div>
                         </div>
@@ -114,9 +113,9 @@ export const ExistingChannelsModal: FC<{
             <div className="flex justify-end">
                 <Button
                     onClick={handleConnect}
-                    disabled={!selectedLocation || loading}
+                    disabled={!selectedPage || loading}
                 >
-                    {loading ? 'Connecting...' : 'Connect Location'}
+                    {loading ? 'Connecting...' : 'Connect Page'}
                 </Button>
             </div>
         </div>

@@ -688,4 +688,344 @@ export class IntegrationsController {
       undefined
     );
   }
+
+  // Facebook Saved Accounts
+  @Get('/social/facebook/saved-accounts')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async getSavedFacebookAccounts(@GetOrgFromRequest() org: Organization) {
+    const savedAccounts = await this._integrationService.getSavedGoogleAccounts(
+      org.id,
+      'facebook'
+    );
+    const fbProvider = this._integrationManager.getSocialIntegration('facebook') as any;
+
+    const accountsWithPages = await Promise.all(
+      savedAccounts.map(async (account) => {
+        try {
+          let accessToken = account.token;
+          if (
+            account.tokenExpiration &&
+            new Date(account.tokenExpiration) < new Date()
+          ) {
+            const refreshed = await fbProvider.refreshToken(
+              account.refreshToken
+            );
+            accessToken = refreshed.accessToken;
+          }
+
+          const pages = await fbProvider.pages(accessToken);
+
+          return {
+            rootId: account.rootInternalId,
+            name: account.name,
+            picture: account.picture,
+            pages: pages,
+            token: accessToken,
+            refreshToken: account.refreshToken,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
+
+    return accountsWithPages.filter(Boolean);
+  }
+
+  @Post('/social/facebook/connect-saved')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async connectSavedFacebookPage(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: { pageId: string; accessToken: string; refreshToken: string }
+  ) {
+    const fbProvider = this._integrationManager.getSocialIntegration('facebook') as any;
+    const pages = await fbProvider.pages(body.accessToken);
+    const selectedPage = pages.find((p) => p.id === body.pageId);
+
+    if (!selectedPage) {
+      throw new Error('Page not found');
+    }
+
+    const pageInfo = await fbProvider.fetchPageInformation(
+      body.accessToken,
+      { page: selectedPage.id }
+    );
+
+    const refreshedData = await fbProvider.refreshToken(body.refreshToken);
+
+    return this._integrationService.createOrUpdateIntegration(
+      undefined,
+      true,
+      org.id,
+      pageInfo.name,
+      pageInfo.picture,
+      'social',
+      pageInfo.id,
+      'facebook',
+      body.accessToken,
+      body.refreshToken,
+      refreshedData.expiresIn,
+      pageInfo.username,
+      false,
+      undefined,
+      undefined,
+      undefined
+    );
+  }
+
+  // Instagram Saved Accounts
+  @Get('/social/instagram/saved-accounts')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async getSavedInstagramAccounts(@GetOrgFromRequest() org: Organization) {
+    const savedAccounts = await this._integrationService.getSavedGoogleAccounts(
+      org.id,
+      'instagram'
+    );
+    const igProvider = this._integrationManager.getSocialIntegration('instagram') as any;
+
+    const accountsWithPages = await Promise.all(
+      savedAccounts.map(async (account) => {
+        try {
+          let accessToken = account.token;
+          if (
+            account.tokenExpiration &&
+            new Date(account.tokenExpiration) < new Date()
+          ) {
+            const refreshed = await igProvider.refreshToken(
+              account.refreshToken
+            );
+            accessToken = refreshed.accessToken;
+          }
+
+          const pages = await igProvider.pages(accessToken);
+
+          return {
+            rootId: account.rootInternalId,
+            name: account.name,
+            picture: account.picture,
+            pages: pages,
+            token: accessToken,
+            refreshToken: account.refreshToken,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
+
+    return accountsWithPages.filter(Boolean);
+  }
+
+  @Post('/social/instagram/connect-saved')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async connectSavedInstagramAccount(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: { accountId: string; pageId: string; accessToken: string; refreshToken: string }
+  ) {
+    const igProvider = this._integrationManager.getSocialIntegration('instagram') as any;
+    const pages = await igProvider.pages(body.accessToken);
+    const selectedAccount = pages.find((p) => p.id === body.accountId);
+
+    if (!selectedAccount) {
+      throw new Error('Account not found');
+    }
+
+    const accountInfo = await igProvider.fetchPageInformation(
+      body.accessToken,
+      { id: selectedAccount.id, pageId: selectedAccount.pageId }
+    );
+
+    const refreshedData = await igProvider.refreshToken(body.refreshToken);
+
+    return this._integrationService.createOrUpdateIntegration(
+      undefined,
+      true,
+      org.id,
+      accountInfo.name,
+      accountInfo.picture,
+      'social',
+      accountInfo.id,
+      'instagram',
+      body.accessToken,
+      body.refreshToken,
+      refreshedData.expiresIn,
+      accountInfo.username,
+      false,
+      undefined,
+      undefined,
+      undefined
+    );
+  }
+
+  // LinkedIn Saved Accounts
+  @Get('/social/linkedin/saved-accounts')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async getSavedLinkedinAccounts(@GetOrgFromRequest() org: Organization) {
+    const savedAccounts = await this._integrationService.getSavedGoogleAccounts(
+      org.id,
+      'linkedin'
+    );
+    const liProvider = this._integrationManager.getSocialIntegration('linkedin') as any;
+
+    const accountsWithPages = await Promise.all(
+      savedAccounts.map(async (account) => {
+        try {
+          let accessToken = account.token;
+          if (
+            account.tokenExpiration &&
+            new Date(account.tokenExpiration) < new Date()
+          ) {
+            const refreshed = await liProvider.refreshToken(
+              account.refreshToken
+            );
+            accessToken = refreshed.accessToken;
+          }
+
+          const pages = await liProvider.companies(accessToken);
+
+          return {
+            rootId: account.rootInternalId,
+            name: account.name,
+            picture: account.picture,
+            pages: pages,
+            token: accessToken,
+            refreshToken: account.refreshToken,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
+
+    return accountsWithPages.filter(Boolean);
+  }
+
+  @Post('/social/linkedin/connect-saved')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async connectSavedLinkedinPage(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: { pageId: string; accessToken: string; refreshToken: string }
+  ) {
+    const liProvider = this._integrationManager.getSocialIntegration('linkedin') as any;
+    const pages = await liProvider.companies(body.accessToken);
+    const selectedPage = pages.find((p) => p.id === body.pageId);
+
+    if (!selectedPage) {
+      throw new Error('Page not found');
+    }
+
+    const pageInfo = await liProvider.fetchPageInformation(
+      body.accessToken,
+      { id: selectedPage.id, pageId: selectedPage.pageId }
+    );
+
+    const refreshedData = await liProvider.refreshToken(body.refreshToken);
+
+    return this._integrationService.createOrUpdateIntegration(
+      undefined,
+      true,
+      org.id,
+      pageInfo.name,
+      pageInfo.picture,
+      'social',
+      pageInfo.id,
+      'linkedin',
+      body.accessToken,
+      body.refreshToken,
+      refreshedData.expiresIn,
+      pageInfo.username,
+      false,
+      undefined,
+      undefined,
+      undefined
+    );
+  }
+
+  // YouTube Saved Accounts
+  @Get('/social/youtube/saved-accounts')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async getSavedYoutubeAccounts(@GetOrgFromRequest() org: Organization) {
+    const savedAccounts = await this._integrationService.getSavedGoogleAccounts(
+      org.id,
+      'youtube'
+    );
+    const ytProvider = this._integrationManager.getSocialIntegration('youtube') as any;
+
+    const accountsWithChannels = await Promise.all(
+      savedAccounts.map(async (account) => {
+        try {
+          let accessToken = account.token;
+          if (
+            account.tokenExpiration &&
+            new Date(account.tokenExpiration) < new Date()
+          ) {
+            const refreshed = await ytProvider.refreshToken(
+              account.refreshToken
+            );
+            accessToken = refreshed.accessToken;
+          }
+
+          const channels = await ytProvider.pages(accessToken);
+
+          return {
+            rootId: account.rootInternalId,
+            name: account.name,
+            picture: account.picture,
+            channels: channels,
+            token: accessToken,
+            refreshToken: account.refreshToken,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
+
+    return accountsWithChannels.filter(Boolean);
+  }
+
+  @Post('/social/youtube/connect-saved')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async connectSavedYoutubeChannel(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: { channelId: string; accessToken: string; refreshToken: string }
+  ) {
+    const ytProvider = this._integrationManager.getSocialIntegration('youtube') as any;
+    const channels = await ytProvider.pages(body.accessToken);
+    const selectedChannel = channels.find((p) => p.id === body.channelId);
+
+    if (!selectedChannel) {
+      throw new Error('Channel not found');
+    }
+
+    const channelInfo = await ytProvider.fetchPageInformation(
+      body.accessToken,
+      { id: selectedChannel.id }
+    );
+
+    const refreshedData = await ytProvider.refreshToken(body.refreshToken);
+
+    return this._integrationService.createOrUpdateIntegration(
+      undefined,
+      true,
+      org.id,
+      channelInfo.name,
+      channelInfo.picture,
+      'social',
+      channelInfo.id,
+      'youtube',
+      body.accessToken,
+      body.refreshToken,
+      refreshedData.expiresIn,
+      channelInfo.username,
+      false,
+      undefined,
+      undefined,
+      undefined
+    );
+  }
 }
