@@ -23,7 +23,7 @@ export const AnalyticsComponent: FC = () => {
     return <LoadingComponent />;
   }
   return (
-    <div className="flex gap-[24px] flex-1">
+    <div className="flex flex-col lg:flex-row gap-[24px] flex-1">
       <div className="flex flex-col gap-[24px] flex-1">
         <StarsAndForks list={analytics} trending={trending} />
         <StarsTableComponent />

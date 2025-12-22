@@ -357,6 +357,7 @@ export const LaunchesComponent = () => {
   const [reload, setReload] = useState(false);
   const [collapseMenu, setCollapseMenu] = useCookie('collapseMenu', '0');
   const [mode] = useCookie('mode', 'dark');
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { isLoading, data: integrations, mutate } = useIntegrationList();
 
   const totalNonDisabledChannels = useMemo(() => {
@@ -492,15 +493,66 @@ export const LaunchesComponent = () => {
   return (
     <DNDProvider>
       <CalendarWeekProvider integrations={sortedIntegrations}>
+        {/* Mobile Hamburger Menu Button */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="md:hidden fixed top-4 left-4 z-50 bg-primary text-primary-foreground p-3 rounded-lg shadow-lg hover:bg-primary/90 transition-colors"
+          aria-label="Toggle menu"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            {mobileMenuOpen ? (
+              // X icon when menu is open
+              <>
+                <line x1="18" y1="6" x2="6" y2="18" />
+                <line x1="6" y1="6" x2="18" y2="18" />
+              </>
+            ) : (
+              // Hamburger icon when menu is closed
+              <>
+                <line x1="3" y1="12" x2="21" y2="12" />
+                <line x1="3" y1="6" x2="21" y2="6" />
+                <line x1="3" y1="18" x2="21" y2="18" />
+              </>
+            )}
+          </svg>
+        </button>
+
+        {/* Mobile Menu Backdrop */}
+        {mobileMenuOpen && (
+          <div
+            className="md:hidden fixed inset-0 bg-black/50 z-40 transition-opacity"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+
+        {/* Sidebar - Responsive */}
         <div
           className={clsx(
-            'flex relative flex-col',
-            collapseMenu === '1' ? 'group sidebar w-[100px]' : 'w-[260px]'
+            'flex relative flex-col transition-all duration-300',
+            // Mobile: overlay when open, hidden when closed
+            mobileMenuOpen
+              ? 'fixed inset-y-0 left-0 z-50 w-[280px] shadow-2xl'
+              : 'hidden',
+            // Tablet & Desktop: normal sidebar, always visible
+            'md:flex md:relative md:shadow-none',
+            collapseMenu === '1' ? 'group sidebar md:w-[80px] lg:w-[100px]' : 'md:w-[200px] lg:w-[260px]'
           )}
         >
           <div
             className={clsx(
-              'bg-newBgColorInner p-[20px] flex flex-col gap-[15px] transition-all absolute start-0 top-0 w-full h-full overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor'
+              'bg-newBgColorInner flex flex-col gap-[15px] transition-all absolute start-0 top-0 w-full h-full overflow-auto scrollbar scrollbar-thumb-fifth scrollbar-track-newBgColor',
+              // Responsive padding
+              'p-[12px] md:p-[16px] lg:p-[20px]'
             )}
           >
             <div className="flex items-center">
@@ -531,8 +583,8 @@ export const LaunchesComponent = () => {
               </div>
             </div>
             <div className="flex flex-col gap-[8px] group-[.sidebar]:mx-auto group-[.sidebar]:w-[44px]">
-              <AddProviderButton update={() => update(true)} />
-              <ExistingChannelsButton update={() => update(true)} />
+              <AddProviderButton update={() => { update(true); setMobileMenuOpen(false); }} />
+              <ExistingChannelsButton update={() => { update(true); setMobileMenuOpen(false); }} />
               <div className="flex gap-[8px] group-[.sidebar]:flex-col">
                 {sortedIntegrations?.length > 0 && <NewPost />}
                 {sortedIntegrations?.length > 0 &&
@@ -583,9 +635,9 @@ export const LaunchesComponent = () => {
             </div>
           </div>
         </div>
-        <div className="bg-newBgColorInner flex-1 flex-col flex p-[20px] gap-[12px]">
+        <div className="bg-newBgColorInner flex-1 flex-col flex p-[12px] md:p-[16px] lg:p-[20px] gap-[12px]">
           <Filters />
-          <div className="flex-1 flex">
+          <div className="flex-1 flex overflow-auto">
             <Calendar />
           </div>
         </div>
