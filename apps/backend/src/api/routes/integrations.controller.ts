@@ -48,7 +48,7 @@ export class IntegrationsController {
     private _integrationService: IntegrationService,
     private _postService: PostsService,
     private _refreshIntegrationService: RefreshIntegrationService
-  ) {}
+  ) { }
   @Get('/')
   getIntegrations() {
     return this._integrationManager.getAllIntegrations();
@@ -158,18 +158,18 @@ export class IntegrationsController {
 
     const { url } = manager.changeProfilePicture
       ? await manager.changeProfilePicture(
-          integration.internalId,
-          integration.token,
-          body.picture
-        )
+        integration.internalId,
+        integration.token,
+        body.picture
+      )
       : { url: '' };
 
     const { name } = manager.changeNickname
       ? await manager.changeNickname(
-          integration.internalId,
-          integration.token,
-          body.name
-        )
+        integration.internalId,
+        integration.token,
+        body.name
+      )
       : { name: '' };
 
     return this._integrationService.updateNameAndUrl(id, name, url);
@@ -215,9 +215,9 @@ export class IntegrationsController {
     try {
       const getExternalUrl = integrationProvider.externalUrl
         ? {
-            ...(await integrationProvider.externalUrl(externalUrl)),
-            instanceUrl: externalUrl,
-          }
+          ...(await integrationProvider.externalUrl(externalUrl)),
+          instanceUrl: externalUrl,
+        }
         : undefined;
 
       const { codeVerifier, state, url } =
@@ -507,10 +507,10 @@ export class IntegrationsController {
       details
         ? AuthService.fixedEncryption(details)
         : integrationProvider.customFields
-        ? AuthService.fixedEncryption(
+          ? AuthService.fixedEncryption(
             Buffer.from(body.code, 'base64').toString()
           )
-        : undefined
+          : undefined
     );
   }
 
@@ -596,5 +596,96 @@ export class IntegrationsController {
   @Get('/telegram/updates')
   async getUpdates(@Query() query: { word: string; id?: number }) {
     return new TelegramProvider().getBotId(query);
+  }
+
+  @Get('/social/gmb/saved-accounts')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async getSavedGoogleAccounts(@GetOrgFromRequest() org: Organization) {
+    const savedAccounts = await this._integrationService.getSavedGoogleAccounts(
+      org.id,
+      'gmb'
+    );
+    const gmbProvider = this._integrationManager.getSocialIntegration('gmb');
+
+    const accountsWithLocations = await Promise.all(
+      savedAccounts.map(async (account) => {
+        try {
+          // Refresh token if needed
+          let accessToken = account.token;
+          if (
+            account.tokenExpiration &&
+            new Date(account.tokenExpiration) < new Date()
+          ) {
+            const refreshed = await gmbProvider.refreshToken(
+              account.refreshToken
+            );
+            accessToken = refreshed.accessToken;
+          }
+
+          // Get available locations
+          const locations = await gmbProvider.pages(accessToken);
+
+          return {
+            rootId: account.rootInternalId,
+            name: account.name,
+            picture: account.picture,
+            locations: locations,
+            token: accessToken,
+            refreshToken: account.refreshToken,
+          };
+        } catch (error) {
+          return null;
+        }
+      })
+    );
+
+    return accountsWithLocations.filter(Boolean);
+  }
+
+  @Post('/social/gmb/connect-saved')
+  @CheckPolicies([AuthorizationActions.Create, Sections.CHANNEL])
+  async connectSavedGoogleLocation(
+    @GetOrgFromRequest() org: Organization,
+    @Body()
+    body: { locationId: string; accessToken: string; refreshToken: string }
+  ) {
+    const gmbProvider = this._integrationManager.getSocialIntegration('gmb');
+    const pages = await gmbProvider.pages(body.accessToken);
+    const selectedLocation = pages.find((p) => p.id === body.locationId);
+
+    if (!selectedLocation) {
+      throw new Error('Location not found');
+    }
+
+    const locationInfo = await gmbProvider.fetchPageInformation(
+      body.accessToken,
+      {
+        id: selectedLocation.id,
+        accountName: selectedLocation.accountName,
+        locationName: selectedLocation.locationName,
+      }
+    );
+
+    // Get token expiration info
+    const refreshedData = await gmbProvider.refreshToken(body.refreshToken);
+
+    return this._integrationService.createOrUpdateIntegration(
+      undefined,
+      true, // oneTimeToken
+      org.id,
+      locationInfo.name,
+      locationInfo.picture,
+      'social',
+      locationInfo.id,
+      'gmb',
+      body.accessToken,
+      body.refreshToken,
+      refreshedData.expiresIn,
+      locationInfo.username,
+      false, // not in between steps
+      undefined,
+      undefined,
+      undefined
+    );
   }
 }

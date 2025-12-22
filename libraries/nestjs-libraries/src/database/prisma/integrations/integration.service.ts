@@ -644,4 +644,8 @@ export class IntegrationService {
       }, [] as number[])
     );
   }
+
+  async getSavedGoogleAccounts(orgId: string, provider: string = 'gmb') {
+    return this._integrationRepository.getSavedGoogleAccounts(orgId, provider);
+  }
 }

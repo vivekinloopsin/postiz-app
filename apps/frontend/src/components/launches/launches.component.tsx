@@ -26,6 +26,7 @@ import { NewPost } from '@gitroom/frontend/components/launches/new.post';
 import { useT } from '@gitroom/react/translation/get.transation.service.client';
 import { useIntegrationList } from '@gitroom/frontend/components/launches/helpers/use.integration.list';
 import useCookie from 'react-use-cookie';
+import { ExistingChannelsButton } from '@gitroom/frontend/components/launches/existing.channels.button.component';
 
 export const SVGLine = () => {
   return (
@@ -183,9 +184,9 @@ export const MenuGroupComponent: FC<
             className="line-clamp-1"
             {...(collapsed
               ? {
-                  'data-tooltip-id': 'tooltip',
-                  'data-tooltip-content': group.name,
-                }
+                'data-tooltip-id': 'tooltip',
+                'data-tooltip-content': group.name,
+              }
               : {})}
           >
             {group.name}
@@ -251,9 +252,9 @@ export const MenuComponent: FC<
       })}
       {...(collapsed
         ? {
-            'data-tooltip-id': 'tooltip',
-            'data-tooltip-content': integration.name,
-          }
+          'data-tooltip-id': 'tooltip',
+          'data-tooltip-content': integration.name,
+        }
         : {})}
       key={integration.id}
       className={clsx(
@@ -313,12 +314,12 @@ export const MenuComponent: FC<
         // @ts-ignore
         ref={drag}
         {...(integration.disabled &&
-        totalNonDisabledChannels === user?.totalChannels
+          totalNonDisabledChannels === user?.totalChannels
           ? {
-              'data-tooltip-id': 'tooltip',
-              'data-tooltip-content':
-                'This channel is disabled, please upgrade your plan to enable it.',
-            }
+            'data-tooltip-id': 'tooltip',
+            'data-tooltip-content':
+              'This channel is disabled, please upgrade your plan to enable it.',
+          }
           : {})}
         role="Handle"
         className={clsx(
@@ -434,10 +435,10 @@ export const LaunchesComponent = () => {
   );
   const refreshChannel = useCallback(
     (
-        integration: Integration & {
-          identifier: string;
-        }
-      ) =>
+      integration: Integration & {
+        identifier: string;
+      }
+    ) =>
       async () => {
         const { url } = await (
           await fetch(
@@ -531,6 +532,7 @@ export const LaunchesComponent = () => {
             </div>
             <div className="flex flex-col gap-[8px] group-[.sidebar]:mx-auto group-[.sidebar]:w-[44px]">
               <AddProviderButton update={() => update(true)} />
+              <ExistingChannelsButton update={() => update(true)} />
               <div className="flex gap-[8px] group-[.sidebar]:flex-col">
                 {sortedIntegrations?.length > 0 && <NewPost />}
                 {sortedIntegrations?.length > 0 &&
