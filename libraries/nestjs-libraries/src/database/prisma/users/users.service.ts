@@ -11,7 +11,7 @@ export class UsersService {
   constructor(
     private _usersRepository: UsersRepository,
     private _organizationRepository: OrganizationRepository
-  ) {}
+  ) { }
 
   getUserByEmail(email: string) {
     return this._usersRepository.getUserByEmail(email);
@@ -63,5 +63,8 @@ export class UsersService {
 
   updateEmailNotifications(userId: string, body: EmailNotificationsDto) {
     return this._usersRepository.updateEmailNotifications(userId, body);
+  }
+  deleteAccount(userId: string) {
+    return this._usersRepository.deleteAccount(userId);
   }
 }

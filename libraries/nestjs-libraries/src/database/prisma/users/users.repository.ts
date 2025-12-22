@@ -9,7 +9,7 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 
 @Injectable()
 export class UsersRepository {
-  constructor(private _user: PrismaRepository<'user'>) {}
+  constructor(private _user: PrismaRepository<'user'>) { }
 
   getImpersonateUser(name: string) {
     return this._user.model.user.findMany({
@@ -151,13 +151,13 @@ export class UsersRepository {
         bio: body.bio,
         picture: body.picture
           ? {
-              connect: {
-                id: body.picture.id,
-              },
-            }
-          : {
-              disconnect: true,
+            connect: {
+              id: body.picture.id,
             },
+          }
+          : {
+            disconnect: true,
+          },
       },
     });
   }
@@ -199,15 +199,15 @@ export class UsersRepository {
       items: {
         ...(items.items.length
           ? {
-              some: {
-                OR: items.items.map((key) => ({ key })),
-              },
-            }
+            some: {
+              OR: items.items.map((key) => ({ key })),
+            },
+          }
           : {
-              some: {
-                OR: allTagsOptions.map((p) => ({ key: p.key })),
-              },
-            }),
+            some: {
+              OR: allTagsOptions.map((p) => ({ key: p.key })),
+            },
+          }),
       },
     };
 
@@ -263,5 +263,24 @@ export class UsersRepository {
       list,
       count,
     };
+  }
+  async deleteAccount(userId: string) {
+    await this._user.model.userOrganization.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
+    await this._user.model.itemUser.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
+    return this._user.model.user.delete({
+      where: {
+        id: userId,
+      },
+    });
   }
 }

@@ -20,6 +20,7 @@ import clsx from 'clsx';
 import { TeamsComponent } from '@gitroom/frontend/components/settings/teams.component';
 import { useUser } from '@gitroom/frontend/components/layout/user.context';
 import { LogoutComponent } from '@gitroom/frontend/components/layout/logout.component';
+import { DeleteAccountComponent } from '@gitroom/frontend/components/layout/delete-account.component';
 import { useSearchParams } from 'next/navigation';
 import { useVariables } from '@gitroom/react/helpers/variable.context';
 import { PublicComponent } from '@gitroom/frontend/components/public-api/public.component';
@@ -143,6 +144,7 @@ export const SettingsPopup: FC<{
           {showLogout && (
             <div className="mt-4">
               <LogoutComponent />
+              <DeleteAccountComponent />
             </div>
           )}
         </div>

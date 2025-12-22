@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   Post,
@@ -41,7 +42,7 @@ export class UsersController {
     private _orgService: OrganizationService,
     private _userService: UsersService,
     private _trackService: TrackService
-  ) {}
+  ) { }
   @Get('/self')
   async getSelf(
     @GetUserFromRequest() user: User,
@@ -105,10 +106,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
     });
@@ -196,10 +197,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
     });
@@ -218,10 +219,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       maxAge: -1,
       expires: new Date(0),
@@ -231,10 +232,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       maxAge: -1,
       expires: new Date(0),
@@ -244,10 +245,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       maxAge: -1,
       expires: new Date(0),
@@ -282,10 +283,10 @@ export class UsersController {
         domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
         ...(!process.env.NOT_SECURED
           ? {
-              secure: true,
-              httpOnly: true,
-              sameSite: 'none',
-            }
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+          }
           : {}),
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
       });
@@ -294,5 +295,53 @@ export class UsersController {
     res.status(200).json({
       track: uniqueId,
     });
+  }
+  @Delete('/account')
+  async deleteAccount(
+    @GetUserFromRequest() user: User,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    await this._userService.deleteAccount(user.id);
+    response.header('logout', 'true');
+    response.cookie('auth', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.cookie('showorg', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.cookie('impersonate', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.status(200).send();
   }
 }
