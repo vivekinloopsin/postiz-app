@@ -1,6 +1,8 @@
+declare let process: any;
 import {
   Body,
   Controller,
+  Delete,
   Get,
   HttpException,
   Post,
@@ -41,7 +43,7 @@ export class UsersController {
     private _orgService: OrganizationService,
     private _userService: UsersService,
     private _trackService: TrackService
-  ) {}
+  ) { }
   @Get('/self')
   async getSelf(
     @GetUserFromRequest() user: User,
@@ -105,10 +107,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
     });
@@ -196,10 +198,10 @@ export class UsersController {
       domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
       ...(!process.env.NOT_SECURED
         ? {
-            secure: true,
-            httpOnly: true,
-            sameSite: 'none',
-          }
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
         : {}),
       expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
     });
@@ -212,48 +214,57 @@ export class UsersController {
   }
 
   @Post('/logout')
+  @Post('/logout')
   logout(@Res({ passthrough: true }) response: Response) {
-    response.header('logout', 'true');
-    response.cookie('auth', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
+    console.log('Logging out user...');
+    try {
+      response.header('logout', 'true');
+      const domain = getCookieUrlFromDomain(process.env.FRONTEND_URL!);
+
+      response.cookie('auth', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
             secure: true,
             httpOnly: true,
             sameSite: 'none',
           }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
 
-    response.cookie('showorg', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
+      response.cookie('showorg', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
             secure: true,
             httpOnly: true,
             sameSite: 'none',
           }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
 
-    response.cookie('impersonate', '', {
-      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
-      ...(!process.env.NOT_SECURED
-        ? {
+      response.cookie('impersonate', '', {
+        domain,
+        ...(!process.env.NOT_SECURED
+          ? {
             secure: true,
             httpOnly: true,
             sameSite: 'none',
           }
-        : {}),
-      maxAge: -1,
-      expires: new Date(0),
-    });
+          : {}),
+        maxAge: -1,
+        expires: new Date(0),
+      });
 
-    response.status(200).send();
+      response.status(200).send();
+    } catch (e) {
+      console.error('Logout error:', e);
+      response.status(200).send();
+    }
   }
 
   @Post('/t')
@@ -282,10 +293,10 @@ export class UsersController {
         domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
         ...(!process.env.NOT_SECURED
           ? {
-              secure: true,
-              httpOnly: true,
-              sameSite: 'none',
-            }
+            secure: true,
+            httpOnly: true,
+            sameSite: 'none',
+          }
           : {}),
         expires: new Date(Date.now() + 1000 * 60 * 60 * 24 * 365),
       });
@@ -294,5 +305,55 @@ export class UsersController {
     res.status(200).json({
       track: uniqueId,
     });
+  }
+  @Delete('/account')
+  async deleteAccount(
+    @GetUserFromRequest() user: User,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    console.log('Deleting account for user:', user.id);
+    await this._userService.deleteAccount(user.id);
+    console.log('Account deleted, clearing cookies...');
+    response.header('logout', 'true');
+    response.cookie('auth', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.cookie('showorg', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.cookie('impersonate', '', {
+      domain: getCookieUrlFromDomain(process.env.FRONTEND_URL!),
+      ...(!process.env.NOT_SECURED
+        ? {
+          secure: true,
+          httpOnly: true,
+          sameSite: 'none',
+        }
+        : {}),
+      maxAge: -1,
+      expires: new Date(0),
+    });
+
+    response.status(200).send();
   }
 }

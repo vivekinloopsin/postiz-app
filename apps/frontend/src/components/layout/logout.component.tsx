@@ -12,6 +12,8 @@ export const LogoutComponent = () => {
   const t = useT();
 
   const logout = useCallback(async () => {
+    console.log('Logout button clicked');
+    // alert('Logout clicked');
     if (
       await deleteDialog(
         t(
@@ -21,16 +23,21 @@ export const LogoutComponent = () => {
         t('yes_logout', 'Yes logout')
       )
     ) {
-      if (!isSecured) {
-        setCookie('auth', '', -10);
-      } else {
-        await fetch('/user/logout', {
-          method: 'POST',
-        });
+      console.log('Logout confirmed');
+      // alert('Logout confirmed');
+      if (isSecured) {
+        try {
+          await fetch('/user/logout', {
+            method: 'POST',
+          });
+        } catch (e) {
+          console.error('Logout fetch failed', e);
+        }
       }
-      window.location.href = '/';
+      setCookie('auth', '', -10);
+      window.location.href = '/auth/logout';
     }
-  }, []);
+  }, [isSecured, fetch, t]);
   return (
     <div className="text-red-400 cursor-pointer" onClick={logout}>
       {t('logout_from', 'Logout from')}

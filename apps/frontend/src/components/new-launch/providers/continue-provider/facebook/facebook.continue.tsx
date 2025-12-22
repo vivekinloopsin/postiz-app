@@ -13,7 +13,7 @@ export const FacebookContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [page, setSelectedPage] = useState<null | string>(null);
+  const [pages, setSelectedPages] = useState<string[]>([]);
   const loadPages = useCallback(async () => {
     try {
       const pages = await call.get('pages');
@@ -22,9 +22,16 @@ export const FacebookContinue: FC<{
       // Handle error silently
     }
   }, []);
-  const setPage = useCallback(
+  const togglePage = useCallback(
     (id: string) => () => {
-      setSelectedPage(id);
+      setSelectedPages((prev) => {
+        const exists = prev.includes(id);
+        if (exists) {
+          return prev.filter((pageId) => pageId !== id);
+        } else {
+          return [...prev, id];
+        }
+      });
     },
     []
   );
@@ -40,8 +47,8 @@ export const FacebookContinue: FC<{
   const t = useT();
 
   const saveFacebook = useCallback(async () => {
-    await onSave({ page });
-  }, [onSave, page]);
+    await onSave(pages.map((pageId) => ({ page: pageId })));
+  }, [onSave, pages]);
   const filteredData = useMemo(() => {
     return (
       data?.filter((p: { id: string }) => !existingId.includes(p.id)) || []
@@ -85,11 +92,28 @@ export const FacebookContinue: FC<{
             <div
               key={p.id}
               className={clsx(
-                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh',
-                page === p.id && 'bg-seventh'
+                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px] relative',
+                pages.includes(p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setPage(p.id)}
+              onClick={togglePage(p.id)}
             >
+              {pages.includes(p.id) && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
               <div>
                 <img
                   className="w-full"
@@ -102,8 +126,13 @@ export const FacebookContinue: FC<{
           )
         )}
       </div>
-      <div>
-        <Button disabled={!page} onClick={saveFacebook}>
+      <div className="flex flex-col gap-[10px]">
+        {pages.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {t('selected_count', `${pages.length} page(s) selected`)}
+          </div>
+        )}
+        <Button disabled={pages.length === 0} onClick={saveFacebook}>
           {t('save', 'Save')}
         </Button>
       </div>

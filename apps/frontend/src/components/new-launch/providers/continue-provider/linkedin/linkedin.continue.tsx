@@ -15,10 +15,12 @@ export const LinkedinContinue: FC<{
   const t = useT();
 
   const call = useCustomProviderFunction();
-  const [page, setSelectedPage] = useState<null | {
-    id: string;
-    pageId: string;
-  }>(null);
+  const [pages, setSelectedPages] = useState<
+    Array<{
+      id: string;
+      pageId: string;
+    }>
+  >([]);
   const loadPages = useCallback(async () => {
     try {
       const pages = await call.get('companies');
@@ -27,9 +29,16 @@ export const LinkedinContinue: FC<{
       // Handle error silently
     }
   }, []);
-  const setPage = useCallback(
+  const togglePage = useCallback(
     (param: { id: string; pageId: string }) => () => {
-      setSelectedPage(param);
+      setSelectedPages((prev) => {
+        const exists = prev.find((p) => p.id === param.id);
+        if (exists) {
+          return prev.filter((p) => p.id !== param.id);
+        } else {
+          return [...prev, param];
+        }
+      });
     },
     []
   );
@@ -43,8 +52,8 @@ export const LinkedinContinue: FC<{
     refreshInterval: 0,
   });
   const saveLinkedin = useCallback(async () => {
-    await onSave({ page: page?.id });
-  }, [onSave, page]);
+    await onSave(pages.map((p) => ({ page: p.id })));
+  }, [onSave, pages]);
   const filteredData = useMemo(() => {
     return (
       data?.filter((p: { id: string }) => !existingId.includes(p.id)) || []
@@ -80,11 +89,28 @@ export const LinkedinContinue: FC<{
             <div
               key={p.id}
               className={clsx(
-                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh',
-                page?.id === p.id && 'bg-seventh'
+                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px] relative',
+                pages.find((pg) => pg.id === p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setPage(p)}
+              onClick={togglePage(p)}
             >
+              {pages.find((pg) => pg.id === p.id) && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
               <div>
                 <img className="w-full" src={p.picture} alt="profile" />
               </div>
@@ -93,8 +119,13 @@ export const LinkedinContinue: FC<{
           )
         )}
       </div>
-      <div>
-        <Button disabled={!page} onClick={saveLinkedin}>
+      <div className="flex flex-col gap-[10px]">
+        {pages.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {t('selected_count', `${pages.length} page(s) selected`)}
+          </div>
+        )}
+        <Button disabled={pages.length === 0} onClick={saveLinkedin}>
           {t('save', 'Save')}
         </Button>
       </div>

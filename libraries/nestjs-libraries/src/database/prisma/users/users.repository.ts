@@ -1,4 +1,4 @@
-import { PrismaRepository } from '@gitroom/nestjs-libraries/database/prisma/prisma.service';
+import { PrismaRepository } from '../prisma.service';
 import { Injectable } from '@nestjs/common';
 import { Provider } from '@prisma/client';
 import { AuthService } from '@gitroom/helpers/auth/auth.service';
@@ -9,7 +9,9 @@ import { EmailNotificationsDto } from '@gitroom/nestjs-libraries/dtos/users/emai
 
 @Injectable()
 export class UsersRepository {
-  constructor(private _user: PrismaRepository<'user'>) {}
+  constructor(
+    private _user: PrismaRepository<'user'>
+  ) { }
 
   getImpersonateUser(name: string) {
     return this._user.model.user.findMany({
@@ -151,13 +153,13 @@ export class UsersRepository {
         bio: body.bio,
         picture: body.picture
           ? {
-              connect: {
-                id: body.picture.id,
-              },
-            }
-          : {
-              disconnect: true,
+            connect: {
+              id: body.picture.id,
             },
+          }
+          : {
+            disconnect: true,
+          },
       },
     });
   }
@@ -199,15 +201,15 @@ export class UsersRepository {
       items: {
         ...(items.items.length
           ? {
-              some: {
-                OR: items.items.map((key) => ({ key })),
-              },
-            }
+            some: {
+              OR: items.items.map((key) => ({ key })),
+            },
+          }
           : {
-              some: {
-                OR: allTagsOptions.map((p) => ({ key: p.key })),
-              },
-            }),
+            some: {
+              OR: allTagsOptions.map((p) => ({ key: p.key })),
+            },
+          }),
       },
     };
 
@@ -263,5 +265,99 @@ export class UsersRepository {
       list,
       count,
     };
+  }
+  async deleteAccount(userId: string) {
+    const model = this._user.model as any;
+    // 1. Delete SocialMediaAgency niches
+    await model.socialMediaAgencyNiche.deleteMany({
+      where: {
+        agency: {
+          userId
+        }
+      }
+    });
+
+    // 2. Delete SocialMediaAgency
+    await model.socialMediaAgency.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 3. Delete Comments
+    await model.comments.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 4. Delete PayoutProblems
+    await model.payoutProblems.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 5. Delete OrderItems (linked to orders where user is buyer or seller)
+    await model.orderItems.deleteMany({
+      where: {
+        order: {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId }
+          ]
+        }
+      }
+    });
+
+    // 6. Delete Orders
+    await model.orders.deleteMany({
+      where: {
+        OR: [
+          { buyerId: userId },
+          { sellerId: userId }
+        ]
+      }
+    });
+
+    // 7. Delete Messages
+    await model.messages.deleteMany({
+      where: {
+        group: {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId }
+          ]
+        }
+      }
+    });
+
+    // 8. Delete MessagesGroup
+    await model.messagesGroup.deleteMany({
+      where: {
+        OR: [
+          { buyerId: userId },
+          { sellerId: userId }
+        ]
+      }
+    });
+
+    await model.userOrganization.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
+    await model.itemUser.deleteMany({
+      where: {
+        userId,
+      },
+    });
+
+    return model.user.delete({
+      where: {
+        id: userId,
+      },
+    });
   }
 }

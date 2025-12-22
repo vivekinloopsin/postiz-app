@@ -54,7 +54,7 @@ function LayoutContextInner(params: { children: ReactNode }) {
         setCookie('auth', '', -10);
         setCookie('showorg', '', -10);
         setCookie('impersonate', '', -10);
-        window.location.href = '/';
+        window.location.href = '/auth/logout';
         return true;
       }
       const reloadOrOnboarding =
@@ -85,7 +85,7 @@ function LayoutContextInner(params: { children: ReactNode }) {
           setCookie('showorg', '', -10);
           setCookie('impersonate', '', -10);
         }
-        window.location.href = '/';
+        window.location.href = '/auth/logout';
       }
       if (response.status === 406) {
         if (

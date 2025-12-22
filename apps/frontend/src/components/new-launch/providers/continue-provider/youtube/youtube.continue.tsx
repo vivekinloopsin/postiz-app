@@ -13,7 +13,7 @@ export const YoutubeContinue: FC<{
 }> = (props) => {
   const { onSave, existingId } = props;
   const call = useCustomProviderFunction();
-  const [channel, setSelectedChannel] = useState<null | { id: string }>(null);
+  const [channels, setSelectedChannels] = useState<Array<{ id: string }>>([]);
   const t = useT();
 
   const loadChannels = useCallback(async () => {
@@ -25,9 +25,16 @@ export const YoutubeContinue: FC<{
     }
   }, []);
 
-  const setChannel = useCallback(
+  const toggleChannel = useCallback(
     (param: { id: string }) => () => {
-      setSelectedChannel(param);
+      setSelectedChannels((prev) => {
+        const exists = prev.find((ch) => ch.id === param.id);
+        if (exists) {
+          return prev.filter((ch) => ch.id !== param.id);
+        } else {
+          return [...prev, param];
+        }
+      });
     },
     []
   );
@@ -43,8 +50,8 @@ export const YoutubeContinue: FC<{
   });
 
   const saveYoutube = useCallback(async () => {
-    await onSave(channel);
-  }, [onSave, channel]);
+    await onSave(channels);
+  }, [onSave, channels]);
 
   const filteredData = useMemo(() => {
     return (
@@ -94,11 +101,28 @@ export const YoutubeContinue: FC<{
             <div
               key={p.id}
               className={clsx(
-                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px]',
-                channel?.id === p.id && 'bg-seventh border-primary'
+                'flex flex-col w-full text-center gap-[10px] border border-input p-[10px] hover:bg-seventh rounded-[8px] relative',
+                channels.find((ch) => ch.id === p.id) && 'bg-seventh border-primary'
               )}
-              onClick={setChannel({ id: p.id })}
+              onClick={toggleChannel({ id: p.id })}
             >
+              {channels.find((ch) => ch.id === p.id) && (
+                <div className="absolute top-2 right-2 bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center">
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="20 6 9 17 4 12" />
+                  </svg>
+                </div>
+              )}
               <div className="flex justify-center">
                 {p.picture?.data?.url ? (
                   <img
@@ -138,8 +162,13 @@ export const YoutubeContinue: FC<{
           )
         )}
       </div>
-      <div>
-        <Button disabled={!channel} onClick={saveYoutube}>
+      <div className="flex flex-col gap-[10px]">
+        {channels.length > 0 && (
+          <div className="text-sm text-muted-foreground">
+            {t('selected_count', `${channels.length} channel(s) selected`)}
+          </div>
+        )}
+        <Button disabled={channels.length === 0} onClick={saveYoutube}>
           {t('save', 'Save')}
         </Button>
       </div>
