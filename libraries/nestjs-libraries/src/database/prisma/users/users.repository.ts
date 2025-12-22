@@ -267,19 +267,94 @@ export class UsersRepository {
     };
   }
   async deleteAccount(userId: string) {
-    await (this._user.model as any).userOrganization.deleteMany({
+    const model = this._user.model as any;
+    // 1. Delete SocialMediaAgency niches
+    await model.socialMediaAgencyNiche.deleteMany({
+      where: {
+        agency: {
+          userId
+        }
+      }
+    });
+
+    // 2. Delete SocialMediaAgency
+    await model.socialMediaAgency.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 3. Delete Comments
+    await model.comments.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 4. Delete PayoutProblems
+    await model.payoutProblems.deleteMany({
+      where: {
+        userId
+      }
+    });
+
+    // 5. Delete OrderItems (linked to orders where user is buyer or seller)
+    await model.orderItems.deleteMany({
+      where: {
+        order: {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId }
+          ]
+        }
+      }
+    });
+
+    // 6. Delete Orders
+    await model.orders.deleteMany({
+      where: {
+        OR: [
+          { buyerId: userId },
+          { sellerId: userId }
+        ]
+      }
+    });
+
+    // 7. Delete Messages
+    await model.messages.deleteMany({
+      where: {
+        group: {
+          OR: [
+            { buyerId: userId },
+            { sellerId: userId }
+          ]
+        }
+      }
+    });
+
+    // 8. Delete MessagesGroup
+    await model.messagesGroup.deleteMany({
+      where: {
+        OR: [
+          { buyerId: userId },
+          { sellerId: userId }
+        ]
+      }
+    });
+
+    await model.userOrganization.deleteMany({
       where: {
         userId,
       },
     });
 
-    await (this._user.model as any).itemUser.deleteMany({
+    await model.itemUser.deleteMany({
       where: {
         userId,
       },
     });
 
-    return this._user.model.user.delete({
+    return model.user.delete({
       where: {
         id: userId,
       },

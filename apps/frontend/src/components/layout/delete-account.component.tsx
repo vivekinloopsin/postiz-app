@@ -20,11 +20,15 @@ export const DeleteAccountComponent = () => {
                 t('yes_delete_account', 'Yes, delete my account')
             )
         ) {
-            await fetch('/user/account', {
+            const response = await fetch('/user/account', {
                 method: 'DELETE',
             });
-            setCookie('auth', '', -10);
-            window.location.href = '/auth/logout';
+            if (response.ok) {
+                setCookie('auth', '', -10);
+                window.location.href = '/auth/logout';
+            } else {
+                console.error('Failed to delete account');
+            }
         }
     }, [fetch, t]);
 
