@@ -605,7 +605,7 @@ export class IntegrationsController {
       org.id,
       'gmb'
     );
-    const gmbProvider = this._integrationManager.getSocialIntegration('gmb');
+    const gmbProvider = this._integrationManager.getSocialIntegration('gmb') as any;
 
     const accountsWithLocations = await Promise.all(
       savedAccounts.map(async (account) => {
@@ -649,7 +649,7 @@ export class IntegrationsController {
     @Body()
     body: { locationId: string; accessToken: string; refreshToken: string }
   ) {
-    const gmbProvider = this._integrationManager.getSocialIntegration('gmb');
+    const gmbProvider = this._integrationManager.getSocialIntegration('gmb') as any;
     const pages = await gmbProvider.pages(body.accessToken);
     const selectedLocation = pages.find((p) => p.id === body.locationId);
 
