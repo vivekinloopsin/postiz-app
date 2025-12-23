@@ -131,14 +131,16 @@ export const Component: FC<{
       <div
         style={{ zIndex }}
         className={clsx(
-          'fixed flex left-0 top-0 min-w-full min-h-full bg-popup transition-all animate-fadeIn overflow-y-auto pb-[50px] text-newTextColor',
+          'fixed flex left-0 top-0 min-w-full min-h-full bg-popup transition-all animate-fadeIn overflow-y-auto text-newTextColor',
+          // Responsive padding
+          'pb-[20px] md:pb-[50px]',
           !isLast && '!overflow-hidden'
         )}
       >
         <div className="relative flex-1">
           <div className="absolute top-0 left-0 min-w-full min-h-full">
             <div
-              className="mx-auto py-[48px]"
+              className="mx-auto py-[24px] md:py-[48px] px-[12px] md:px-[24px]"
               {...(modal.size && { style: { width: modal.size } })}
             >
               {typeof modal.children === 'function'
@@ -156,28 +158,28 @@ export const Component: FC<{
       <div
         onClick={closeModalFunction}
         style={{ zIndex }}
-        className="fixed flex left-0 top-0 min-w-full min-h-full bg-popup transition-all animate-fadeIn overflow-y-auto pb-[50px] text-newTextColor"
+        className="fixed flex left-0 top-0 min-w-full min-h-full bg-popup transition-all animate-fadeIn overflow-y-auto pb-[20px] md:pb-[50px] text-newTextColor"
       >
         <div className="relative flex-1">
-          <div className="absolute top-0 left-0 min-w-full min-h-full pt-[100px] pb-[100px]">
+          <div className="absolute top-0 left-0 min-w-full min-h-full pt-[20px] md:pt-[100px] pb-[20px] md:pb-[100px] px-[12px] md:px-0">
             <div
               className={clsx(
-                !modal.removeLayout && 'gap-[40px] p-[32px]',
-                'bg-newBgColorInner mx-auto flex flex-col w-fit rounded-[24px] relative',
-                modal.size ? '' : 'min-w-[600px]'
+                !modal.removeLayout && 'gap-[20px] md:gap-[40px] p-[16px] md:p-[32px]',
+                'bg-newBgColorInner mx-auto flex flex-col w-full rounded-[12px] md:rounded-[24px] relative',
+                modal.size ? '' : 'md:min-w-[600px] md:w-fit'
               )}
               {...(modal.size && { style: { width: modal.size } })}
               onClick={(e) => e.stopPropagation()}
             >
               <div className="flex items-center">
-                <div className="text-[24px] font-[600] flex-1">
+                <div className="text-[20px] md:text-[24px] font-[600] flex-1">
                   {modal.title}
                 </div>
                 {typeof modal.withCloseButton === 'undefined' ||
-                modal.withCloseButton ? (
+                  modal.withCloseButton ? (
                   <div className="cursor-pointer">
                     <button
-                      className="outline-none absolute end-[20px] top-[20px] mantine-UnstyledButton-root mantine-ActionIcon-root hover:bg-tableBorder cursor-pointer mantine-Modal-close mantine-1dcetaa"
+                      className="outline-none absolute end-[12px] md:end-[20px] top-[12px] md:top-[20px] mantine-UnstyledButton-root mantine-ActionIcon-root hover:bg-tableBorder cursor-pointer mantine-Modal-close mantine-1dcetaa"
                       type="button"
                       onClick={closeModalFunction}
                     >

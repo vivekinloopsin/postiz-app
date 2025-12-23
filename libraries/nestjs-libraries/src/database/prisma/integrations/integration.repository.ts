@@ -17,7 +17,7 @@ export class IntegrationRepository {
     private _exisingPlugData: PrismaRepository<'exisingPlugData'>,
     private _customers: PrismaRepository<'customer'>,
     private _mentions: PrismaRepository<'mentions'>
-  ) {}
+  ) { }
 
   getMentions(platform: string, q: string) {
     return this._mentions.model.mentions.findMany({
@@ -176,12 +176,12 @@ export class IntegrationRepository {
   async createOrUpdateIntegration(
     additionalSettings:
       | {
-          title: string;
-          description: string;
-          type: 'checkbox' | 'text' | 'textarea';
-          value: any;
-          regex?: string;
-        }[]
+        title: string;
+        description: string;
+        type: 'checkbox' | 'text' | 'textarea';
+        value: any;
+        regex?: string;
+      }[]
       | undefined,
     oneTimeToken: boolean,
     org: string,
@@ -201,12 +201,12 @@ export class IntegrationRepository {
   ) {
     const postTimes = timezone
       ? {
-          postingTimes: JSON.stringify([
-            { time: 560 - timezone },
-            { time: 850 - timezone },
-            { time: 1140 - timezone },
-          ]),
-        }
+        postingTimes: JSON.stringify([
+          { time: 560 - timezone },
+          { time: 850 - timezone },
+          { time: 1140 - timezone },
+        ]),
+      }
       : {};
     const upsert = await this._integration.model.integration.upsert({
       where: {
@@ -245,8 +245,8 @@ export class IntegrationRepository {
         type: type as any,
         ...(!refresh
           ? {
-              inBetweenSteps: isBetweenSteps,
-            }
+            inBetweenSteps: isBetweenSteps,
+          }
           : {}),
         ...(picture ? { picture } : {}),
         profile: username,
@@ -382,17 +382,17 @@ export class IntegrationRepository {
     const customer = !name
       ? undefined
       : (await this._customers.model.customer.findFirst({
-          where: {
-            orgId: org,
-            name,
-          },
-        })) ||
-        (await this._customers.model.customer.create({
-          data: {
-            name,
-            orgId: org,
-          },
-        }));
+        where: {
+          orgId: org,
+          name,
+        },
+      })) ||
+      (await this._customers.model.customer.create({
+        data: {
+          name,
+          orgId: org,
+        },
+      }));
 
     return this._integration.model.integration.update({
       where: {
@@ -403,10 +403,10 @@ export class IntegrationRepository {
         customer: !customer
           ? { disconnect: true }
           : {
-              connect: {
-                id: customer.id,
-              },
+            connect: {
+              id: customer.id,
             },
+          },
       },
     });
   }
@@ -419,17 +419,17 @@ export class IntegrationRepository {
       },
       data: !group
         ? {
-            customer: {
-              disconnect: true,
-            },
-          }
+          customer: {
+            disconnect: true,
+          },
+        }
         : {
-            customer: {
-              connect: {
-                id: group,
-              },
+          customer: {
+            connect: {
+              id: group,
             },
           },
+        },
     });
   }
 
@@ -629,5 +629,40 @@ export class IntegrationRepository {
         postingTimes: true,
       },
     });
+  }
+
+  async getSavedGoogleAccounts(org: string, provider: string = 'gmb') {
+    // Get all integrations for the provider
+    const allIntegrations = await this._integration.model.integration.findMany({
+      where: {
+        organizationId: org,
+        providerIdentifier: provider,
+        deletedAt: null,
+        refreshNeeded: false,
+      },
+      select: {
+        id: true,
+        rootInternalId: true,
+        token: true,
+        refreshToken: true,
+        tokenExpiration: true,
+        name: true,
+        picture: true,
+      },
+      orderBy: {
+        createdAt: 'desc',
+      },
+    });
+
+    // Group by rootInternalId and take the most recent one for each account
+    const uniqueAccounts = new Map();
+    for (const integration of allIntegrations) {
+      const rootId = integration.rootInternalId || integration.id;
+      if (!uniqueAccounts.has(rootId)) {
+        uniqueAccounts.set(rootId, integration);
+      }
+    }
+
+    return Array.from(uniqueAccounts.values());
   }
 }
