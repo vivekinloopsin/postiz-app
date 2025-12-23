@@ -55,7 +55,7 @@ export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) 
                 </svg>
             </div>
             <div className="text-start text-[16px] group-[.sidebar]:hidden">
-                {t('existing_channels', 'Existing Channels')}
+                {t('existing_gmb_channels', 'Existing Google Business Channels')}
             </div>
         </button>
     );

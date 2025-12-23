@@ -71,13 +71,21 @@ export const ExistingChannelsModal: FC<{
         );
     }
 
-    // Flatten all locations from all accounts
-    const allLocations = accounts.flatMap(account =>
-        account.locations.map(location => ({
-            ...location,
-            account,
-        }))
-    );
+    // Flatten and deduplicate locations
+    const allLocationsMap = new Map();
+
+    accounts.forEach(account => {
+        account.locations.forEach(location => {
+            if (!allLocationsMap.has(location.id)) {
+                allLocationsMap.set(location.id, {
+                    ...location,
+                    account
+                });
+            }
+        });
+    });
+
+    const allLocations = Array.from(allLocationsMap.values());
 
     return (
         <div className="flex flex-col gap-[20px] p-[20px]">
@@ -90,8 +98,8 @@ export const ExistingChannelsModal: FC<{
                             key={location.id}
                             onClick={() => setSelectedLocation({ locationId: location.id, account: location.account })}
                             className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedLocation?.locationId === location.id
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
                                 }`}
                         >
                             <div className="flex items-center gap-[10px]">

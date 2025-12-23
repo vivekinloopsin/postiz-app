@@ -1,4 +1,4 @@
- 'use client';
+'use client';
 
 import React, { ReactNode, useCallback } from 'react';
 import { Logo } from '@gitroom/frontend/components/new-layout/logo';
@@ -34,11 +34,12 @@ import { Title } from '@gitroom/frontend/components/layout/title';
 import { TopMenu } from '@gitroom/frontend/components/layout/top.menu';
 import { LanguageComponent } from '@gitroom/frontend/components/layout/language.component';
 import { ChromeExtensionComponent } from '@gitroom/frontend/components/layout/chrome.extension.component';
+import { LogoutButton } from '@gitroom/frontend/components/layout/logout.button.component';
 import NotificationComponent from '@gitroom/frontend/components/notifications/notification.component';
 import { BillingAfter } from '@gitroom/frontend/components/new-layout/billing.after';
 import { OrganizationSelector } from '@gitroom/frontend/components/layout/organization.selector';
 import { PreConditionComponent } from '@gitroom/frontend/components/layout/pre-condition.component';
- import { AttachToFeedbackIcon } from '@gitroom/frontend/components/new-layout/sentry.feedback.component';
+import { AttachToFeedbackIcon } from '@gitroom/frontend/components/new-layout/sentry.feedback.component';
 
 const jakartaSans = Plus_Jakarta_Sans({
   weight: ['600', '500'],
@@ -113,6 +114,9 @@ export const LayoutComponent = ({ children }: { children: ReactNode }) => {
                     </div>
                     <div className="flex gap-[20px] text-textItemBlur">
                       <OrganizationSelector />
+                      <div className="hover:text-newTextColor">
+                        <LogoutButton />
+                      </div>
                       <div className="hover:text-newTextColor">
                         <ModeComponent />
                       </div>

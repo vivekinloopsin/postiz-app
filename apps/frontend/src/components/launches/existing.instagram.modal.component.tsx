@@ -72,12 +72,20 @@ export const ExistingInstagramModal: FC<{
         );
     }
 
-    const allAccounts = accounts.flatMap(savedAccount =>
-        savedAccount.pages.map(account => ({
-            ...account,
-            savedAccount,
-        }))
-    );
+    const allAccountsMap = new Map();
+
+    accounts.forEach(savedAccount => {
+        savedAccount.pages.forEach(account => {
+            if (!allAccountsMap.has(account.id)) {
+                allAccountsMap.set(account.id, {
+                    ...account,
+                    savedAccount
+                });
+            }
+        });
+    });
+
+    const allAccounts = Array.from(allAccountsMap.values());
 
     return (
         <div className="flex flex-col gap-[20px] p-[20px]">
@@ -89,8 +97,8 @@ export const ExistingInstagramModal: FC<{
                             key={account.id}
                             onClick={() => setSelectedAccount({ account, savedAccount: account.savedAccount })}
                             className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedAccount?.account.id === account.id
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
                                 }`}
                         >
                             <div className="flex items-center gap-[10px]">

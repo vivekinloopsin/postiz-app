@@ -70,12 +70,20 @@ export const ExistingYoutubeModal: FC<{
         );
     }
 
-    const allChannels = accounts.flatMap(savedAccount =>
-        savedAccount.channels.map(channel => ({
-            ...channel,
-            savedAccount,
-        }))
-    );
+    const allChannelsMap = new Map();
+
+    accounts.forEach(savedAccount => {
+        savedAccount.channels.forEach(channel => {
+            if (!allChannelsMap.has(channel.id)) {
+                allChannelsMap.set(channel.id, {
+                    ...channel,
+                    savedAccount
+                });
+            }
+        });
+    });
+
+    const allChannels = Array.from(allChannelsMap.values());
 
     return (
         <div className="flex flex-col gap-[20px] p-[20px]">
@@ -87,8 +95,8 @@ export const ExistingYoutubeModal: FC<{
                             key={channel.id}
                             onClick={() => setSelectedChannel({ channel, savedAccount: channel.savedAccount })}
                             className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedChannel?.channel.id === channel.id
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
                                 }`}
                         >
                             <div className="flex items-center gap-[10px]">
