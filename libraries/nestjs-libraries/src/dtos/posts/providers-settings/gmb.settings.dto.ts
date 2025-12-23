@@ -24,10 +24,11 @@ export class GmbSettingsDto {
     | 'LEARN_MORE'
     | 'SIGN_UP'
     | 'GET_OFFER'
-    | 'CALL';
+    | 'CALL'
+    | 'BUY';
 
   @IsOptional()
-  @ValidateIf((o) => o.callToActionType)
+  @ValidateIf((o) => o.callToActionType && o.callToActionType !== 'CALL' && o.callToActionType !== 'NONE')
   @IsUrl()
   callToActionUrl?: string;
 
