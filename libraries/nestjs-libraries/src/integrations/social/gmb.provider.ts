@@ -429,11 +429,13 @@ export class GmbProvider extends SocialAbstract implements SocialProvider {
     if (
       settings?.callToActionType &&
       settings.callToActionType !== 'NONE' &&
-      settings?.callToActionUrl
+      (settings.callToActionType === 'CALL' || settings?.callToActionUrl)
     ) {
       postBody.callToAction = {
         actionType: settings.callToActionType,
-        url: settings.callToActionUrl,
+        ...(settings.callToActionType !== 'CALL' && {
+          url: settings.callToActionUrl,
+        }),
       };
     }
 

@@ -9,7 +9,8 @@ import { GmbSettingsDto } from '@gitroom/nestjs-libraries/dtos/posts/providers-s
 import { useSettings } from '@gitroom/frontend/components/launches/helpers/use.values';
 import { Input } from '@gitroom/react/form/input';
 import { Select } from '@gitroom/react/form/select';
-import { useWatch } from 'react-hook-form';
+import { useWatch, useFormContext } from 'react-hook-form';
+import { GeneralPreviewComponent } from '@gitroom/frontend/components/launches/general.preview.component';
 
 const topicTypes = [
   {
@@ -36,7 +37,7 @@ const callToActionTypes = [
     value: 'BOOK',
   },
   {
-    label: 'Order Online',
+    label: 'Order online',
     value: 'ORDER',
   },
   {
@@ -44,20 +45,24 @@ const callToActionTypes = [
     value: 'SHOP',
   },
   {
-    label: 'Learn More',
+    label: 'Learn more',
     value: 'LEARN_MORE',
   },
   {
-    label: 'Sign Up',
+    label: 'Sign up',
     value: 'SIGN_UP',
   },
   {
-    label: 'Get Offer',
+    label: 'Get offer',
     value: 'GET_OFFER',
   },
   {
     label: 'Call',
     value: 'CALL',
+  },
+  {
+    label: 'Buy',
+    value: 'BUY',
   },
 ];
 
@@ -82,7 +87,7 @@ const GmbSettings: FC = () => {
       </Select>
 
       <Select
-        label="Call to Action"
+        label="Add a button (optional)"
         {...register('callToActionType', {
           value: 'NONE',
         })}
@@ -98,7 +103,7 @@ const GmbSettings: FC = () => {
         callToActionType !== 'NONE' &&
         callToActionType !== 'CALL' && (
           <Input
-            label="Call to Action URL"
+            label="Link for your button*"
             placeholder="https://example.com"
             {...register('callToActionUrl')}
           />
@@ -159,11 +164,47 @@ const GmbSettings: FC = () => {
   );
 };
 
+const GmbPreview: FC<{ maximumCharacters?: number }> = (props) => {
+  const { control } = useFormContext();
+  const callToActionType = useWatch({ control, name: 'callToActionType' });
+  const topicType = useWatch({ control, name: 'topicType' });
+  const eventTitle = useWatch({ control, name: 'eventTitle' });
+
+  const ctaLabel = callToActionTypes.find(
+    (t) => t.value === callToActionType
+  )?.label;
+
+  return (
+    <div className="flex flex-col gap-[12px]">
+      <GeneralPreviewComponent {...props} />
+      {(callToActionType && callToActionType !== 'NONE') ||
+        (topicType === 'EVENT' && eventTitle) ? (
+        <div className="px-[16px] pb-[16px] mt-[-10px]">
+          <div className="bg-white/5 border border-white/10 rounded-[12px] p-[16px] flex flex-col gap-[12px] shadow-xl">
+            {topicType === 'EVENT' && eventTitle && (
+              <div className="text-[16px] font-bold text-white border-b border-white/10 pb-[8px]">
+                📅 {eventTitle}
+              </div>
+            )}
+            {callToActionType && callToActionType !== 'NONE' && (
+              <div className="flex justify-center">
+                <div className="w-full py-[10px] px-[20px] bg-[#4285F4] hover:bg-[#357ae8] text-white text-center rounded-[24px] font-medium transition-colors cursor-default select-none">
+                  {ctaLabel}
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      ) : null}
+    </div>
+  );
+};
+
 export default withProvider({
   postComment: PostComment.POST,
   minimumCharacters: [],
   SettingsComponent: GmbSettings,
-  CustomPreviewComponent: undefined,
+  CustomPreviewComponent: GmbPreview,
   dto: GmbSettingsDto,
   checkValidity: async (items, settings: any) => {
     // GMB posts can have text only, or text with one image
