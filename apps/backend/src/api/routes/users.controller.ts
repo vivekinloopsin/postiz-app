@@ -54,10 +54,11 @@ export class UsersController {
       throw new HttpForbiddenException();
     }
 
+    const fullUser = await this._userService.getUserById(user.id);
     const impersonate = req.cookies.impersonate || req.headers.impersonate;
     // @ts-ignore
     return {
-      ...user,
+      ...fullUser,
       orgId: organization.id,
       // @ts-ignore
       totalChannels: !process.env.STRIPE_PUBLISHABLE_KEY ? 10000 : organization?.subscription?.totalChannels || pricing.FREE.channel,
