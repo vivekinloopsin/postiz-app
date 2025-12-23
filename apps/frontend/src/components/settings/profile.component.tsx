@@ -39,7 +39,7 @@ export const ProfileComponent: FC = () => {
                         )}
                     </div>
                     <div className="flex flex-col gap-[8px]">
-                        <Button type="button" onClick={openMedia} size="small">
+                        <Button type="button" onClick={openMedia} className="h-[32px] px-[16px] text-[12px] w-fit">
                             {t('upload_image', 'Upload Image')}
                         </Button>
                         {picture && (
