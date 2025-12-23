@@ -48,6 +48,14 @@ export class UsersRepository {
       where: {
         id,
       },
+      include: {
+        picture: {
+          select: {
+            id: true,
+            path: true,
+          },
+        },
+      },
     });
   }
 

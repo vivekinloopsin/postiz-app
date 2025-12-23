@@ -70,13 +70,21 @@ export const ExistingFacebookModal: FC<{
         );
     }
 
-    // Flatten all pages from all accounts
-    const allPages = accounts.flatMap(account =>
-        account.pages.map(page => ({
-            ...page,
-            account,
-        }))
-    );
+    // Flatten and deduplicate pages
+    const allPagesMap = new Map();
+
+    accounts.forEach(account => {
+        account.pages.forEach(page => {
+            if (!allPagesMap.has(page.id)) {
+                allPagesMap.set(page.id, {
+                    ...page,
+                    account
+                });
+            }
+        });
+    });
+
+    const allPages = Array.from(allPagesMap.values());
 
     return (
         <div className="flex flex-col gap-[20px] p-[20px]">
@@ -89,8 +97,8 @@ export const ExistingFacebookModal: FC<{
                             key={page.id}
                             onClick={() => setSelectedPage({ pageId: page.id, account: page.account })}
                             className={`cursor-pointer p-[15px] rounded-[8px] border-2 transition-all ${selectedPage?.pageId === page.id
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
+                                ? 'border-primary bg-primary/10'
+                                : 'border-tableBorder bg-newTableHeader hover:border-primary/50'
                                 }`}
                         >
                             <div className="flex items-center gap-[10px]">

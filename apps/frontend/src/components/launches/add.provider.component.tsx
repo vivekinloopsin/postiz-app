@@ -47,7 +47,7 @@ export const AddProviderButton: FC<{
 
   return (
     <button
-      className="text-btnText bg-btnSimple h-[44px] pt-[12px] pb-[14px] ps-[16px] pe-[20px] justify-center items-center flex rounded-[8px] gap-[8px]"
+      className="text-btnText bg-btnSimple min-h-[44px] py-[8px] ps-[16px] pe-[16px] justify-start items-center flex rounded-[8px] gap-[8px] w-full"
       onClick={add}
     >
       <div>
@@ -250,8 +250,8 @@ export const CustomVariables: FC<{
         ...acc,
         ...(item.defaultValue
           ? {
-              [item.key]: item.defaultValue,
-            }
+            [item.key]: item.defaultValue,
+          }
           : {}),
       }),
       {}
@@ -323,17 +323,17 @@ export const AddProviderComponent: FC<{
   const modal = useModals();
   const getSocialLink = useCallback(
     (
-        identifier: string,
-        isExternal: boolean,
-        isWeb3: boolean,
-        customFields?: Array<{
-          key: string;
-          label: string;
-          validation: string;
-          defaultValue?: string;
-          type: 'text' | 'password';
-        }>
-      ) =>
+      identifier: string,
+      isExternal: boolean,
+      isWeb3: boolean,
+      customFields?: Array<{
+        key: string;
+        label: string;
+        validation: string;
+        defaultValue?: string;
+        type: 'text' | 'password';
+      }>
+    ) =>
       async () => {
         const openWeb3 = async () => {
           const { component: Web3Providers } = web3List.find(
@@ -362,8 +362,7 @@ export const AddProviderComponent: FC<{
         const gotoIntegration = async (externalUrl?: string) => {
           const { url, err } = await (
             await fetch(
-              `/integrations/social/${identifier}${
-                externalUrl ? `?externalUrl=${externalUrl}` : ``
+              `/integrations/social/${identifier}${externalUrl ? `?externalUrl=${externalUrl}` : ``
               }`
             )
           ).json();
@@ -445,9 +444,9 @@ export const AddProviderComponent: FC<{
               )}
               {...(!!item.toolTip
                 ? {
-                    'data-tooltip-id': 'tooltip',
-                    'data-tooltip-content': item.toolTip,
-                  }
+                  'data-tooltip-id': 'tooltip',
+                  'data-tooltip-content': item.toolTip,
+                }
                 : {})}
               className={
                 'w-full h-[100px] text-[14px] p-[10px] rounded-[8px] bg-newTableHeader text-textColor relative justify-center items-center flex flex-col gap-[10px] cursor-pointer'
