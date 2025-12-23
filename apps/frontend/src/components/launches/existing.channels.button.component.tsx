@@ -45,7 +45,7 @@ export const ExistingChannelsButton: FC<{ update?: () => void }> = ({ update }) 
 
     return (
         <button
-            className="text-btnText bg-btnSimple h-[44px] pt-[12px] pb-[14px] ps-[16px] pe-[20px] justify-center items-center flex rounded-[8px] gap-[8px]"
+            className="text-btnText bg-btnSimple min-h-[44px] py-[8px] ps-[16px] pe-[16px] justify-start items-center flex rounded-[8px] gap-[8px] w-full"
             onClick={openExisting}
         >
             <div>
