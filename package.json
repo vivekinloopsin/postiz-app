@@ -52,7 +52,7 @@
     "@casl/ability": "^6.5.0",
     "@copilotkit/react-core": "1.10.6",
     "@copilotkit/react-textarea": "1.10.6",
-    "@copilotkit/react-ui": "1.10.6",
+    "@copilotkit/react-ui": "1.50.1",
     "@copilotkit/runtime": "1.10.6",
     "@hookform/resolvers": "^3.3.4",
     "@langchain/community": "^0.3.40",
